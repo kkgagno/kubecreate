@@ -1,0 +1,295 @@
+- name: Import vars
+  run_once: true
+  include_vars:
+    file: k8svars.yml
+    name: vardata
+
+- name: Check if metallb is running
+  shell: "kubectl get namespace |grep metallb-system"
+  register: running_process
+  ignore_errors: true
+  #failed_when: running_process.rc < 1
+- debug:
+    msg: "Metallb is running"
+  when: running_process.stdout_lines|length > 0
+  ignore_errors: true
+- meta: end_host
+  when: running_process.stdout_lines|length > 0
+  ignore_errors: true
+
+- name: Restart kubedns and wait, cis settings crash dns pods
+  become: true
+  shell: "{{ item }}"
+  with_items: 
+    - "kubectl rollout restart deployment coredns -n kube-system --kubeconfig /root/.kube/config"
+    - "kubectl wait --for=condition=Ready pods --all -n kube-system --timeout 480s --kubeconfig /root/.kube/config"   
+  ignore_errors: true
+  
+- name: Install Metallb
+  become: false
+  shell: "kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml --kubeconfig /root/.kube/config"
+
+- name: Create metallb.yaml on host
+  file:
+      path: "metallb.yaml"
+      state: touch
+
+- name: metallb.yaml add block of lines
+  blockinfile:
+    path: metallb.yaml  
+    state: present
+    block: |
+      apiVersion: metallb.io/v1beta1
+      kind: IPAddressPool
+      metadata:
+        creationTimestamp: null
+        name: default
+        namespace: metallb-system
+      spec:
+        addresses:
+        - {{ vardata.metallb }}
+      status: {}
+      ---
+      apiVersion: metallb.io/v1beta1
+      kind: L2Advertisement
+      metadata:
+        creationTimestamp: null
+        name: l2advertisement1
+        namespace: metallb-system
+      spec:
+        ipAddressPools:
+        - default       
+      status: {}
+      ---
+
+
+- name: Install Metallb config yaml
+  become: true
+  shell: "{{ item }}"
+  with_items: 
+    - "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
+    - "kubectl apply -f metallb.yaml --kubeconfig /root/.kube/config"
+
+
+- name: Create values.yaml for kured
+  file:
+      path: "/etc/kuredvalues.yaml"
+      state: touch
+      
+
+- name: values.yaml add data to file
+  blockinfile:
+    path: "/etc/kuredvalues.yaml"  
+    state: present
+    block: |
+      extraArgs:
+        reboot-days: mon,tue,wed,thu
+        start-time: 00:00
+        end-time: 06:00
+        time-zone: America/New_York
+      serviceAccount:
+        create: true
+        name: kured
+      updateStrategy: RollingUpdate
+
+
+- name: Add kured repo, create  namespace, and install
+  become: true
+  command: "{{ item }}"
+  with_items:
+      - "helm repo add kubereboot https://kubereboot.github.io/charts"
+      - "helm repo update"
+      - "helm install kured kubereboot/kured --namespace kube-system -f /etc/kuredvalues.yaml --kubeconfig /root/.kube/config" 
+
+- name: Add nfs provisioner and install
+  become: true
+  command: "{{ item }}"
+  with_items:
+      - "helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner"
+      - "helm repo update"
+      - "helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=192.168.122.5 --set nfs.path=/data/nfs --set storageClass.onDelete=true --kubeconfig /root/.kube/config"
+      - "kubectl patch storageclass nfs-client -p '{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}' --kubeconfig /root/.kube/config"
+
+#- name: Create storage class yaml on host
+#  file:
+#      path: "/etc/sc.yaml"
+#      state: touch
+
+
+#- name: storage class yaml add data to file
+#  blockinfile:
+#    path: "/etc/sc.yaml"  
+#    state: present
+#    block: |
+#      apiVersion: storage.k8s.io/v1
+#      kind: StorageClass
+#      metadata:
+#          name: local-storage
+#          annotations:
+#             storageclass.kubernetes.io/is-default-class: "true"
+#      provisioner: kubernetes.io/no-provisioner
+#      reclaimPolicy: Retain
+#      allowVolumeExpansion: true
+#      volumeBindingMode: Immediate
+
+#- name: Create storage class
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "kubectl create -f /etc/sc.yaml"
+
+#- name: Create prometheus persisten volume yaml on host
+#  file:
+#      path: "/etc/prompv.yaml"
+#      state: touch
+
+#- name: storage class yaml add data to file
+#  blockinfile:
+#    path: "/etc/prompv.yaml"  
+#    state: present
+#    block: |	  
+#      apiVersion: v1
+#      kind: PersistentVolume
+#      metadata:
+#        finalizers:
+#        - kubernetes.io/pv-protection
+#        name: prometheus-grafana
+#        namespace: prometheus-stack
+#      spec:
+#        accessModes:
+#        - ReadWriteOnce
+#        capacity:
+#          storage: 10Gi
+#        hostPath:
+#          path: /mnt
+#          type: ""
+#        persistentVolumeReclaimPolicy: Retain
+#        storageClassName: local-storage
+#        volumeMode: Filesystem
+
+#- name: Create persistent volume for Prometheus-Grafana
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "kubectl create -f /etc/prompv.yaml"
+
+
+- name: Create prometheus yaml on host
+  file:
+      path: "/etc/promvalues.yaml"
+      state: touch
+
+
+- name: promvalues.yaml add data to file
+  blockinfile:
+    path: "/etc/promvalues.yaml"  
+    state: present
+    block: |
+      prometheus:
+        storage:
+          volumeClaimTemplate:
+           spec:
+             storageClassName: nfs-client
+             accessModes: ["ReadWriteONce"]
+             resources:
+               requests:
+                 storage: 10Gi
+
+      grafana:
+        persistence:
+           enabled: true
+           size: 10Gi
+           storageClass: nfs-client
+
+
+- name: Add prometheus/grafana repo, create  namespace, and install
+  become: true  
+  command: "{{ item }}"
+  with_items:
+      - "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts"
+      - "helm repo update"
+      - "kubectl create ns prometheus-stack --kubeconfig /root/.kube/config"
+      - "helm install -n prometheus-stack prometheus prometheus-community/kube-prometheus-stack -f k8s_promvalues.yaml --kubeconfig /root/.kube/config"
+      - "kubectl patch svc prometheus-grafana -n prometheus-stack -p '[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"LoadBalancer\"}]' --type='json' --kubeconfig /root/.kube/config"
+
+- name: Create loki persistent volume yaml file
+  file:
+      path: "/etc/lokipv.yaml"
+      state: touch
+
+- name: add loki persistent volume code to lokipv.yaml
+  blockinfile:
+    path: "/etc/lokipv.yaml"  
+    state: present
+    block: |	  
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        finalizers:
+        - kubernetes.io/pv-protection
+        name: loki
+        namespace: prometheus-stack
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        capacity:
+          storage: 10Gi
+        hostPath:
+          path: /mnt
+          type: ""
+        persistentVolumeReclaimPolicy: Retain
+        storageClassName: local-storage
+        volumeMode: Filesystem
+
+- name: Create persistent volume for Loki
+  become: true
+  command: "{{ item }}"
+  with_items:
+      - "kubectl create -f /etc/lokipv.yaml"
+
+- name: Create lokivalues.yaml for loki
+  file:
+      path: "/etc/lokivalues.yaml"
+      state: touch
+      
+
+- name: lokivalues.yaml add data to file
+  blockinfile:
+    path: "/etc/lokivalues.yaml"  
+    state: present
+    block: |
+      loki:
+        enabled: true
+        image:
+          tag: '2.9.11'
+        securityContext:
+          runAsGroup: 0
+          runAsNonRoot: false
+          runAsUser: 0
+        persistence:
+          enabled: true
+          storageClassName: 'local-storage'     
+
+      promtail:
+         enabled: true
+
+      fluent-bit:
+        enabled: false
+
+      grafana:
+        enabled: false
+
+      prometheus:
+        enabled: false
+     
+
+
+- name: Add Loki to prometheus stack
+  become: true
+  command: "{{ item }}"
+  with_items:
+      - "helm repo add grafana https://grafana.github.io/helm-charts"
+      - "helm repo update"
+      - "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --kubeconfig /root/.kube/config"
+      #- "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --set loki.persistence.enabled=true set loki.persistence.storageClassName=nfs-client"
+      
