@@ -90,10 +90,10 @@ crds:
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     ##
     tolerations: []
-    # - key: "key"
-    #   operator: "Equal"
-    #   value: "value"
-    #   effect: "NoSchedule"
+     - effect: "Noschedule"
+       key: "node-role.jarvice.io/jarvice-system"
+       operator: "Exists"
+      
 
     ## If specified, the pod's topology spread constraints.
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
