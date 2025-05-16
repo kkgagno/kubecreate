@@ -54,7 +54,7 @@
     - "kubectl patch deployment dns-autoscaler -n kube-system --type merge --patch-file deploypatch.yaml"
     - "kubectl rollout restart deployment controller -n metallb-system"
     - "kubectl patch deployment controller -n metallb-system --type merge --patch-file deploypatch.yaml"
-    - "kubectl rolout restart deployment cilium-operator -n kube-system"
+    - "kubectl rollout restart deployment cilium-operator -n kube-system"
     - "kubectl patch deployment cilium-operator -n kube-system --type merge --patch-file deploypatch.yaml"
     - "kubectl rollout restart deployment prometheus-kube-state-metrics -n prometheus-stack"
     - "kubectl patch deployment prometheus-kube-state-metrics -n prometheus-stack --type merge --patch-file deploypatch.yaml"
