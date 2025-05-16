@@ -18,6 +18,9 @@
   ignore_errors: true
 
 
+
+
+
 - name: Set control plane nodes jarvice labels
   shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
   with_items: "{{ groups['kube_control_plane'] }}"
@@ -95,6 +98,19 @@
   with_items: 
     - "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
     - "kubectl apply -f metallb.yaml --kubeconfig /root/.kube/config"
+
+- name: Add traefik repo and install traefik
+  become: true
+  shell: "{{ item }}"
+  with_items:
+      - "helm repo add traefik https://traefik.github.io/charts"
+      - "helm repo update"
+      #- "sudo su -"
+      #- "export KUBECONFIG=/root/.kube/config"
+      #- "mkdir ~/.kube"     
+      #- "kubectl config view --raw >~/.kube/config"
+      #- "kubectl create ns traefik-v2"
+      - "helm install -n kube-system traefik traefik/traefik --kubeconfig /root/.kube/config"
 
 
 - name: Create values.yaml for kured
