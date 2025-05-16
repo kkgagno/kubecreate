@@ -4,7 +4,7 @@
 #  loop: "{{ groups['master'] }}"
 #
 
-#- name: Set control plane nodes jarvice labels 
+#- name: Set control plane nodes jarvice labels THINK ISSUE WITH VERSIONING OF ANSIBLE AND PYTHON FOR THIS
 #  k8s:
 #    state: patched
 #    kind: Node
@@ -44,7 +44,7 @@
   ignore_errors: true
 
 
-#- name: Update deployment with tolerations
+#- name: Update deployment with tolerations THINK ISSUE WITH VERSIONING OF ANSIBLE AND PYTHON FOR THIS
 #  k8s:
 #    kubeconfig: /root/.kube/config
 #    state: present
