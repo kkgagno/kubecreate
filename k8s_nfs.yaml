@@ -1,0 +1,5 @@
+---
+  - hosts: nmaster, workers, endpoint, addl_controllers
+    become: yes
+    roles:
+      - { role: k8s_nfs }
