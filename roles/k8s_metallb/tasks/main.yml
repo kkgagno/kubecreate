@@ -17,6 +17,32 @@
   when: running_process.stdout_lines|length > 0
   ignore_errors: true
 
+
+- name: Set control plane nodes jarvice labels
+  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
+  with_items: "{{ groups['kube_control_plane'] }}"
+
+- name: Set control plane nodes jarvice taints
+  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule;"
+  with_items: "{{ groups['kube_control_plane'] }}"
+  ignore_errors: true
+
+- name: Remove control plane labels
+  shell: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
+  with_items: "{{ groups['kube_control_plane'] }}"
+  ignore_errors: true
+
+
+
+- name: Set worker nodes jarvice labels
+  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-compute=true"
+  with_items: "{{ groups['kube_node'] }}"
+
+- name: Set worker nodes jarvice taints
+  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule;"
+  with_items: "{{ groups['kube_node'] }}"
+  ignore_errors: true
+
 - name: Restart kubedns and wait, cis settings crash dns pods
   become: true
   shell: "{{ item }}"
