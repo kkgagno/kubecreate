@@ -1,5 +1,5 @@
 ---
-  - hosts: nmaster, workers, endpoint, addl_controllers
+  - hosts: kube_control_node, kube_node
     become: yes
     roles:
       - { role: k8s_nfs }
