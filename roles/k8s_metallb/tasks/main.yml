@@ -96,7 +96,7 @@
   become: true
   shell: "{{ item }}"
   with_items: 
-    - "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
+    #- "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
     - "kubectl apply -f metallb.yaml --kubeconfig /root/.kube/config"
 
 - name: Add traefik repo and install traefik
