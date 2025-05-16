@@ -6,15 +6,15 @@
 
 - name: Set control plane nodes jarvice labels 
   k8s:
-    state: present
+    state: patched
+    kind: Node
+    name: "{{ item }}"
     definition:
-      apiversion: v1
-      kind: Node
+      apiversion: v1      
       metadata:
-        name: "{{ item }}"
         labels:
           node-role.kubernetes.io/jarvice-system: ""
-        with_items: "{{ groups['kube_control_plane'] }}"
+    with_items: "{{ groups['kube_control_plane'] }}"
 
 
 
