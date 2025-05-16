@@ -1,0 +1,55 @@
+#- name: Show all the hosts in the inventory
+#  ansible.builtin.debug:
+#    msg: "{{ item }}"
+#  loop: "{{ groups['master'] }}"
+#
+
+- name: test 
+  k8s:
+    state: present
+    definition:
+      apiversion: v1
+      kind: Node
+      metadata:
+        name: {{ item }}
+        labels:
+          node-role.kubernetes.io/jarvice-system: ""
+  with_items: "{{ groups['kube_control_plane'] }}"
+
+
+
+#- name: Set control plane nodes jarvice labels
+#  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
+#  with_items: "{{ groups['kube_control_plane'] }}"
+
+#- name: Set control plane nodes jarvice taints
+#  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule;"
+#  with_items: "{{ groups['kube_control_plane'] }}"
+#  ignore_errors: true
+
+#- name: Remove control plane labels
+#  shell: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
+#  with_items: "{{ groups['kube_control_plane'] }}"
+#  ignore_errors: true
+
+
+
+#- name: Set worker nodes jarvice labels
+#  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-compute=true"
+#  with_items: "{{ groups['kube_node'] }}"
+
+#- name: Set worker nodes jarvice labels
+#  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule;"
+#  with_items: "{{ groups['kube_node'] }}"
+#  ignore_errors: true
+
+
+#- name: Update deployment with tolerations
+#  k8s:
+#    kubeconfig: /root/.kube/config
+#    state: present
+#    namespace: kube-system
+#    kind: Deployment
+#    name: traefik
+#    key_file: tolerations.yml
+#    validate_certs: false
