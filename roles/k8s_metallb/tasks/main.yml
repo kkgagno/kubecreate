@@ -21,31 +21,6 @@
 
 
 
-- name: Set control plane nodes jarvice labels
-  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
-  with_items: "{{ groups['kube_control_plane'] }}"
-
-- name: Set control plane nodes jarvice taints
-  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule;"
-  with_items: "{{ groups['kube_control_plane'] }}"
-  ignore_errors: true
-
-- name: Remove control plane labels
-  shell: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
-  with_items: "{{ groups['kube_control_plane'] }}"
-  ignore_errors: true
-
-
-
-- name: Set worker nodes jarvice labels
-  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-compute=true"
-  with_items: "{{ groups['kube_node'] }}"
-
-- name: Set worker nodes jarvice taints
-  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule;"
-  with_items: "{{ groups['kube_node'] }}"
-  ignore_errors: true
-
 #- name: Restart kubedns and wait, cis settings crash dns pods
 #  become: true
 #  shell: "{{ item }}"
@@ -92,12 +67,12 @@
       ---
 
 
-#- name: Install Metallb config yaml
-#  become: true
-#  shell: "{{ item }}"
-#  with_items: 
-#    #- "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
-#    - "kubectl apply -f metallb.yaml --kubeconfig /root/.kube/config"
+- name: Install Metallb config yaml
+  become: true
+  shell: "{{ item }}"
+  with_items: 
+    - "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
+    - "kubectl apply -f metallb.yaml --kubeconfig /root/.kube/config"
 
 - name: Add traefik repo and install traefik
   become: true
@@ -218,40 +193,41 @@
 #      - "kubectl create -f /etc/prompv.yaml"
 
 
-- name: Create prometheus yaml on host
-  file:
-      path: "/etc/promvalues.yaml"
-      state: touch
+#- name: Create prometheus yaml on host
+#  file:
+#  file:
+#      path: "/etc/promvalues.yaml"
+#      state: touch
 
 
-- name: promvalues.yaml add data to file
-  blockinfile:
-    path: "/etc/promvalues.yaml"  
-    state: present
-    block: |
-      prometheus:
-        storage:
-          volumeClaimTemplate:
-           spec:
-             storageClassName: nfs-client
-             accessModes: ["ReadWriteONce"]
-             resources:
-               requests:
-                 storage: 10Gi      
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.jarvice.io/jarvice-system
-        operator: Exists
+#- name: promvalues.yaml add data to file
+#  blockinfile:
+#    path: "/etc/promvalues.yaml"  
+#    state: present
+#    block: |
+#      prometheus:
+#        storage:
+#          volumeClaimTemplate:
+#           spec:
+#             storageClassName: nfs-client
+#             accessModes: ["ReadWriteONce"]
+#             resources:
+#               requests:
+#                 storage: 10Gi      
+#      tolerations:
+#      - effect: NoSchedule
+#        key: node-role.jarvice.io/jarvice-system
+#        operator: Exists
 
-      grafana:
-        persistence:
-           enabled: true
-           size: 10Gi
-           storageClass: nfs-client
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.jarvice.io/jarvice-system
-        operator: Exists
+#      grafana:
+#        persistence:
+#           enabled: true
+#           size: 10Gi
+#           storageClass: nfs-client
+#      tolerations:
+#      - effect: NoSchedule
+#        key: node-role.jarvice.io/jarvice-system
+#        operator: Exists
 
 - name: Add prometheus/grafana repo, create  namespace, and install
   become: true  

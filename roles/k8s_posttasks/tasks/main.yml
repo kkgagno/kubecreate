@@ -16,46 +16,53 @@
 #          node-role.kubernetes.io/jarvice-system: ""
 #  with_items: "{{ groups['kube_control_plane'] }}"
 
+- name: Set control plane nodes jarvice labels
+  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
+  with_items: "{{ groups['kube_control_plane'] }}"
 
+- name: Set control plane nodes jarvice taints
+  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule;"
+  with_items: "{{ groups['kube_control_plane'] }}"
+  ignore_errors: true
 
-#- name: Set control plane nodes jarvice labels
-#  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
-#  with_items: "{{ groups['kube_control_plane'] }}"
-
-#- name: Set control plane nodes jarvice taints
-#  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule;"
-#  with_items: "{{ groups['kube_control_plane'] }}"
-#  ignore_errors: true
-
-#- name: Remove control plane labels
-#  shell: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
-#  with_items: "{{ groups['kube_control_plane'] }}"
-#  ignore_errors: true
+- name: Remove control plane labels
+  shell: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
+  with_items: "{{ groups['kube_control_plane'] }}"
+  ignore_errors: true
 
 
 
-#- name: Set worker nodes jarvice labels
-#  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-compute=true"
-#  with_items: "{{ groups['kube_node'] }}"
+- name: Set worker nodes jarvice labels
+  shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-compute=true"
+  with_items: "{{ groups['kube_node'] }}"
 
-#- name: Set worker nodes jarvice taints
-#  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule;"
-#  with_items: "{{ groups['kube_node'] }}"
-#  ignore_errors: true
+- name: Set worker nodes jarvice taints
+  shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule;"
+  with_items: "{{ groups['kube_node'] }}"
+  ignore_errors: true
 
 
 - name: Set tolerations on management pods and deployments to run on control planes
   become: true
   shell: "{{ item }}"
   with_items: 
+    - "kubectl rollout restart deployment traefik -n kube-system"
     - "kubectl patch deployment traefik -n kube-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl rollout restart deployment nfs-subdir-external-provisioner"
     - "kubectl patch deployment nfs-subdir-external-provisioner --type merge --patch-file deploypatch.yaml"
+    - "kubectl rollout restart deployment dns-autoscaler -n kube-system"
     - "kubectl patch deployment dns-autoscaler -n kube-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl rollout restart deployment controller -n metallb-system"
     - "kubectl patch deployment controller -n metallb-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl rolout restart deployment cilium-operator -n kube-system"
     - "kubectl patch deployment cilium-operator -n kube-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl rollout restart deployment prometheus-kube-state-metrics -n prometheus-stack"
     - "kubectl patch deployment prometheus-kube-state-metrics -n prometheus-stack --type merge --patch-file deploypatch.yaml"
+    - "kubectl rollout restart deployment prometheus-kube-prometheus-operator -n prometheus-stack"
     - "kubectl patch deployment prometheus-kube-prometheus-operator -n prometheus-stack --type merge --patch-file deploypatch.yaml"
+    - "kubectl delete pod prometheus-grafana-0 -n prometheus-stack"
     - "kubectl patch pod prometheus-grafana-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
+    - "kubectl delete pod loki-0 -n prometheus-stack"
     - "kubectl patch pod loki-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
 
 
