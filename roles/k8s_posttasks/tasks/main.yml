@@ -14,7 +14,7 @@
         name: "{{ item }}"
         labels:
           node-role.kubernetes.io/jarvice-system: ""
-      with_items: "{{ groups['kube_control_plane'] }}"
+        with_items: "{{ groups['kube_control_plane'] }}"
 
 
 
