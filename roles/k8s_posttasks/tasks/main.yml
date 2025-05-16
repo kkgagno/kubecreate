@@ -11,7 +11,7 @@
       apiversion: v1
       kind: Node
       metadata:
-        name: {{ item }}
+        name: "{{ item }}""
         labels:
           node-role.kubernetes.io/jarvice-system: ""
     with_items: "{{ groups['kube_control_plane'] }}"
