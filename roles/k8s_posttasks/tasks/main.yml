@@ -44,6 +44,23 @@
   ignore_errors: true
 
 
+- name: Set tolerations on management nodes
+  become: true
+  shell: "{{ item }}"
+  with_items: 
+    - "kubectl patch deployment traefik -n kube-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl patch deployment nfs-subdir-external-provisioner --type merge --patch-file deploypatch.yaml"
+    - "kubectl patch deployment dns-autoscaler -n kube-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl patch deployment controller -n metallb-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl patch deployment cilium-operator -n kube-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl patch deployment prometheus-kube-state-metrics -n prometheus-stack --type merge --patch-file deploypatch.yaml"
+    - "kubectl patch deployment prometheus-kube-prometheus-operator -n prometheus-stack --type merge --patch-file deploypatch.yaml"
+    - "kubectl patch pod prometheus-grafana-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
+    - "kubectl patch pod loki-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
+
+
+
+
 #- name: Update deployment with tolerations THINK ISSUE WITH VERSIONING OF ANSIBLE AND PYTHON FOR THIS
 #  k8s:
 #    kubeconfig: /root/.kube/config
