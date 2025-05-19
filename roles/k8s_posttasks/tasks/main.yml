@@ -48,6 +48,8 @@
   with_items: 
     - "kubectl rollout restart deployment traefik -n kube-system"
     - "kubectl patch deployment traefik -n kube-system --type merge --patch-file deploypatch.yaml"
+    - "kubectl rollout restart deployment coredns -n kube-system"
+    - "kubectl patch deployment coredns -n kube-system --type merge --patch-file deploypatch.yaml"
     - "kubectl rollout restart deployment nfs-subdir-external-provisioner"
     - "kubectl patch deployment nfs-subdir-external-provisioner --type merge --patch-file deploypatch.yaml"
     - "kubectl rollout restart deployment dns-autoscaler -n kube-system"
