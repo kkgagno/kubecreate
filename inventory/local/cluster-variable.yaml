@@ -5,3 +5,4 @@ enable_coredns_k8s_external: false
 calico_network_backend: none
 enable_nodelocaldns: false
 loadbalancer_apiserver: 192.168.122.132:6443
+loadbalancer_apiserver_localhost: false
