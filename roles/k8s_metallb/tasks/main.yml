@@ -1,7 +1,7 @@
 - name: Import vars
   run_once: true
   include_vars:
-    file: k8svars.yml
+    file: inventory/local/cluster-variable.yaml
     name: vardata
 
 - name: Check if metallb is running
