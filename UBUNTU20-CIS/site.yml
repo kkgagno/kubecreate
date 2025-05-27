@@ -1,6 +1,6 @@
 ---
 
-- hosts: master, workers, endpoint, addl_controllers
+- hosts: kube_control_plane, kube_node
   become: true
 
   roles:
