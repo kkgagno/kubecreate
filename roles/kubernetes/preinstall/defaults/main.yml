@@ -20,7 +20,7 @@ remove_default_searchdomains: false
 kube_owner: kube
 kube_cert_group: kube-cert
 kube_config_dir: /etc/kubernetes
-kube_cert_dir: "{{ kube_config_dir }}/ssl"
+kube_cert_dir: /etc/ssl/certs
 kube_cert_compat_dir: /etc/kubernetes/pki
 kubelet_flexvolumes_plugins_dir: /usr/libexec/kubernetes/kubelet-plugins/volume/exec
 
