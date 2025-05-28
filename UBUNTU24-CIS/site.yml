@@ -1,0 +1,6 @@
+- hosts: master, workers, addl_controllers
+  become: true
+
+  roles:
+
+      - role: "{{ playbook_dir }}"
