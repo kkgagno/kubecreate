@@ -1,9 +1,9 @@
-- name: time synch...for when restoring from snap
-  become: true
-  shell: "{{ item }}"
-  with_items:    
-    - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
-  register: command_output
+#- name: time synch...for when restoring from snap
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:    
+#    - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
+#  register: command_output
 
 
 - name: system parameters for K8s initiate
