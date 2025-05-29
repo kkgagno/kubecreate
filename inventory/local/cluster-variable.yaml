@@ -10,6 +10,9 @@ loadbalancer_apiserver:
   address: 192.168.122.132
   port: 6443
 
+ipv4_stack: true
+ipv6_stack: false
+
 #K8s Endpoint nginx LB
 #nginxlb: 192.168.122.132
 #Metallb service IP range for services
