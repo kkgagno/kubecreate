@@ -21,4 +21,4 @@
           - "printf '%s\\n' 'net.bridge.bridge-nf-call-ip6tables = 1' 'net.bridge.bridge-nf-call-iptables = 1' 'net.ipv4.ip_forward = 1' >/etc/sysctl.d/kubernetes.conf"
           - "sysctl --system"
           - "printf '%s\\n' 'KUBELET_EXTRA_ARGS=\"--cgroup-driver=cgroupfs\"'  >/etc/default/kubelet"
-          - "systemctl daemon-reload && sudo systemctl restart kubelet"
+          #- "systemctl daemon-reload && sudo systemctl restart kubelet"
