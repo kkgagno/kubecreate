@@ -1,0 +1,5 @@
+---
+  - hosts: kube_control_plane[0]
+    become: yes
+    roles:
+      - { role: k8s_controller }
