@@ -498,7 +498,7 @@ ubtu24cis_rule_6_2_4_7: true
 ubtu24cis_rule_6_2_4_8: true
 ubtu24cis_rule_6_2_4_9: true
 ubtu24cis_rule_6_2_4_10: true
-# 6.3 Configure Filesystem Integrity Checking
+# 6.3 change back Configure Filesystem Integrity Checking
 ubtu24cis_rule_6_3_1: false
 ubtu24cis_rule_6_3_2: false
 ubtu24cis_rule_6_3_3: false
