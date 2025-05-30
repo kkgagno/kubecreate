@@ -289,22 +289,22 @@ ubtu24cis_rule_3_2_2: true
 ubtu24cis_rule_3_2_3: true
 ubtu24cis_rule_3_2_4: true
 # 3.3 Configure Network Kernel Parameters (Host and Router)
-ubtu24cis_rule_3_3_1: true
-ubtu24cis_rule_3_3_2: true
-ubtu24cis_rule_3_3_3: true
-ubtu24cis_rule_3_3_4: true
-ubtu24cis_rule_3_3_5: true
-ubtu24cis_rule_3_3_6: true
-ubtu24cis_rule_3_3_7: true
-ubtu24cis_rule_3_3_8: true
-ubtu24cis_rule_3_3_9: true
-ubtu24cis_rule_3_3_10: true
-ubtu24cis_rule_3_3_11: true
+ubtu24cis_rule_3_3_1: false
+ubtu24cis_rule_3_3_2: false
+ubtu24cis_rule_3_3_3: false
+ubtu24cis_rule_3_3_4: false
+ubtu24cis_rule_3_3_5: false
+ubtu24cis_rule_3_3_6: false
+ubtu24cis_rule_3_3_7: false
+ubtu24cis_rule_3_3_8: false
+ubtu24cis_rule_3_3_9: false
+ubtu24cis_rule_3_3_10: false
+ubtu24cis_rule_3_3_11: false
 
 ## Section 4 Host Based Firewall
 
 # 4.1 single firewall
-ubtu24cis_rule_4_1_1: true
+ubtu24cis_rule_4_1_1: false
 
 # 4.2 Configure UncomplicatedFirewall
 ubtu24cis_rule_4_2_1: true
