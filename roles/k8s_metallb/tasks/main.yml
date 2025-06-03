@@ -30,7 +30,7 @@
 #  ignore_errors: true
   
 - name: Install Metallb
-  become: false
+  become: true
   shell: "kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml --kubeconfig /root/.kube/config"
 
 - name: Create metallb.yaml on host
