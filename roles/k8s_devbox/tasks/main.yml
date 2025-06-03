@@ -79,12 +79,20 @@
     mode: '0700'
     #mode: '0440'
 
-- name: Extract helm.gz
+- name: extract helm helm.gz
   become: true
-  ansible.builtin.unarchive:
-    src: /etc/helm-v3.16.3-linux-amd64.tar.gz
-    dest: /etc/
-    #remote_src: yes
+  shell: "{{ item }}"
+  with_items:
+          - "sudo tar -xvf /etc/helm-v3.16.3-linux-amd64.tar.gz"
+  
+
+
+#- name: Extract helm.gz
+#  become: true
+#  ansible.builtin.unarchive:
+#    src: /etc/helm-v3.16.3-linux-amd64.tar.gz
+#    dest: /etc/
+#    #remote_src: yes
 
 - name: Remove helm tar file (delete file)
   become: true
