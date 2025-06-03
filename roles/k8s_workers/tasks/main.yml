@@ -48,20 +48,20 @@
      - "{{ command_output.stdout }}"
 
 - name: Set up kubectl for the current user
-  become: false
+  become: true
   command: "{{ item }}"
   with_items:
       - "sudo mkdir -p $HOME/.kube"
       - "sudo chown -R $USER $HOME/.kube"
 
 - name: kubecfg create local file
-  become: false
+  become: true
   file:
       path: "$HOME/.kube/config"
       state: touch
       
 - name: add master kubeconfig local
-  become: false
+  become: true
   copy:
     content: "{{ command_output.stdout }}"
     dest: "$HOME/.kube/config"
