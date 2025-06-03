@@ -5,4 +5,4 @@ nginxlb: 192.168.122.132
 #Metallb service IP range for services
 metallb: 192.168.122.240-192.168.122.250
 #Kubernetes Version (ex. 1.32)
-k8sversion: 1.30
+k8sversion: "1.30"
