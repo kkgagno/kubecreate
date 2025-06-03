@@ -76,7 +76,8 @@
   ansible.builtin.get_url:
     url: https://get.helm.sh/helm-v3.16.3-linux-amd64.tar.gz
     dest: /etc/helm-v3.16.3-linux-amd64.tar.gz
-    mode: '0440'
+    mode: '0700'
+    #mode: '0440'
 
 - name: Extract helm.gz
   become: true
