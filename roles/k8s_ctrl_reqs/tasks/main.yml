@@ -8,6 +8,12 @@
      - "{{ running_process.stdout_lines }}"
   when: running_process.stdout_lines|length > 0
 
+- name: Import vars
+  run_once: true
+  include_vars:
+    file: k8svars.yml
+    name: vardata
+
 - name: time synch...for when restoring from snap
   become: true
   shell: "{{ item }}"
@@ -95,7 +101,7 @@
 
 - name: Download Releasekey  
   become: true
-  shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ var.k8sversion }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes"
+  shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes"
   register: key
 - debug:
      msg:
@@ -103,7 +109,7 @@
 
 - name: echo to sources list
   become: true
-  shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ var.k8sversion }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
+  shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
   register: list
 - debug:
      msg:
