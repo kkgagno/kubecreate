@@ -129,7 +129,7 @@
   delegate_to: localhost
 
 - name: read kubecfg into var
-  become: false
+  become: true
   shell: "cat $HOME/.kube/config"
   register: kubecfg
 - debug:
