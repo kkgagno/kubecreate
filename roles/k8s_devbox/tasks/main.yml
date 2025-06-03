@@ -82,7 +82,7 @@
   become: true
   ansible.builtin.unarchive:
     src: /etc/helm-v3.16.3-linux-amd64.tar.gz
-    dest: /root/
+    dest: /etc/
     #remote_src: yes
 
 - name: Remove helm tar file (delete file)
@@ -94,7 +94,7 @@
 - name: Copy file with owner and permissions
   become: true
   ansible.builtin.copy:
-    src: /root/linux-amd64/
+    src: /etc/linux-amd64/
     dest: /usr/local/bin/
     mode: '0700'
     #remote_src: yes
