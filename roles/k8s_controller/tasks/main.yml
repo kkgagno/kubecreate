@@ -53,6 +53,7 @@
 
 - name: install cilium
   become: true
+  ignore_errors: true
   shell: "cilium install --set ipam.operator.clusterPoolIPv4PodCIDRList={{ vardata.podnetwork }} --set ipv6.enabled=false"
   register: cilium
 - debug:
