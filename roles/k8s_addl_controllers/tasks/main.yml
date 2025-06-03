@@ -1,15 +1,15 @@
-- name: Check if kubeapi is running
-  shell: "pgrep kube-apiserver"
-  register: running_process
-  ignore_errors: true
-  #failed_when: running_process.rc < 1
-- debug:
-    msg: "Kube API is running"
-  when: running_process.stdout_lines|length > 0
-  ignore_errors: true
-- meta: end_host
-  when: running_process.stdout_lines|length > 0
-  ignore_errors: true
+#- name: Check if kubeapi is running
+#  shell: "pgrep kube-apiserver"
+#  register: running_process
+#  ignore_errors: true
+#  #failed_when: running_process.rc < 1
+#- debug:
+#    msg: "Kube API is running"
+#  when: running_process.stdout_lines|length > 0
+#  ignore_errors: true
+#- meta: end_host
+#  when: running_process.stdout_lines|length > 0
+#  ignore_errors: true
 
 - name: time synch...for when restoring from snap
   become: true
@@ -44,7 +44,7 @@
 
 
 - name: Set up kubectl for the current user
-  become: false
+  become: true
   command: "{{ item }}"
   with_items:
       - "sudo mkdir -p $HOME/.kube"
@@ -55,7 +55,7 @@
 
 
 - name: read kubecfg into var
-  become: false
+  become: true
   shell: "cat $HOME/.kube/config"
   register: kubecfg
 - debug:
