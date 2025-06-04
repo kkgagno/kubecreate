@@ -90,9 +90,9 @@ crds:
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     ##
     tolerations: 
-    # - effect: "Noschedule"
-    #   key: "node-role.jarvice.io/jarvice-system"
-    #   operator: "Exists"
+     - effect: "Noschedule"
+       key: "node-role.jarvice.io/jarvice-system"
+       operator: "Exists"
       
 
     ## If specified, the pod's topology spread constraints.
@@ -1090,9 +1090,9 @@ alertmanager:
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     ##
     tolerations: 
-    # - effect: "Noschedule"
-    #   key: "node-role.jarvice.io/jarvice-system"
-    #   operator: "Exists"
+     - effect: "Noschedule"
+       key: "node-role.jarvice.io/jarvice-system"
+       operator: "Exists"
 
     ## If specified, the pod's topology spread constraints.
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
@@ -2796,9 +2796,9 @@ prometheusOperator:
       ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
       ##     
       tolerations: 
-      # - effect: "Noschedule"
-      #   key: "node-role.jarvice.io/jarvice-system"
-      #   operator: "Exists"
+       - effect: "Noschedule"
+         key: "node-role.jarvice.io/jarvice-system"
+         operator: "Exists"
 
       ## Assign custom affinity rules to the prometheus operator
       ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
@@ -3150,9 +3150,9 @@ prometheusOperator:
   ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   ##  
   tolerations: 
-  # - effect: "Noschedule"
-  #   key: "node-role.jarvice.io/jarvice-system"
-  #   operator: "Exists"
+   - effect: "Noschedule"
+     key: "node-role.jarvice.io/jarvice-system"
+     operator: "Exists"
 
   ## Assign custom affinity rules to the prometheus operator
   ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
@@ -3933,9 +3933,9 @@ prometheus:
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     ##
     tolerations: 
-    # - effect: "Noschedule"
-    #   key: "node-role.jarvice.io/jarvice-system"
-    #   operator: "Exists"
+     - effect: "Noschedule"
+       key: "node-role.jarvice.io/jarvice-system"
+       operator: "Exists"
 
     ## If specified, the pod's topology spread constraints.
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/
