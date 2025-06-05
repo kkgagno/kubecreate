@@ -90,7 +90,7 @@ crds:
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     ##
     tolerations: 
-     - effect: "Noschedule"
+     - effect: "NoSchedule"
        key: "node-role.jarvice.io/jarvice-system"
        operator: "Exists"
       
@@ -1090,7 +1090,7 @@ alertmanager:
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     ##
     tolerations: 
-     - effect: "Noschedule"
+     - effect: "NoSchedule"
        key: "node-role.jarvice.io/jarvice-system"
        operator: "Exists"
 
@@ -2796,7 +2796,7 @@ prometheusOperator:
       ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
       ##     
       tolerations: 
-       - effect: "Noschedule"
+       - effect: "NoSchedule"
          key: "node-role.jarvice.io/jarvice-system"
          operator: "Exists"
 
@@ -3150,7 +3150,7 @@ prometheusOperator:
   ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   ##  
   tolerations: 
-   - effect: "Noschedule"
+   - effect: "NoSchedule"
      key: "node-role.jarvice.io/jarvice-system"
      operator: "Exists"
 
@@ -3933,7 +3933,7 @@ prometheus:
     ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
     ##
     tolerations: 
-     - effect: "Noschedule"
+     - effect: "NoSchedule"
        key: "node-role.jarvice.io/jarvice-system"
        operator: "Exists"
 
