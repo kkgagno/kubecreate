@@ -1,11 +1,11 @@
-- name: Create Jarvice namespace
-  become: true
-  kubernetes.core.k8s:
-    name: jarvice-system
-    api_version: v1
-    kind: Namespace
-    state: present
-    kubeconfig: /root/.kube/config
+#- name: Create Jarvice namespace
+#  become: true
+#  kubernetes.core.k8s:
+#    name: jarvice-system
+#    api_version: v1
+#    kind: Namespace
+#    state: present
+#    kubeconfig: /root/.kube/config
 
 - name: Deploy Grafana chart on 5.0.12 with values loaded from template
   kubernetes.core.helm:
