@@ -1,5 +1,4 @@
 ---
-  
   - hosts: kube_control_plane, kube_node
     become: yes
     roles:
