@@ -9,7 +9,7 @@
 - import_playbook: ./UBUNTU24-CIS/site.yml
 - import_playbook: k8s_kubeconfig.yaml
 - import_playbook: k8s_devbox.yaml
-- import_playbook: k8s_metallb.yaml
+- import_playbook: k8s_extras.yaml
 - import_playbook: k8s_posttasks.yaml
 #- import_playbook: k8s_jarvice.yaml
 #- import_playbook: logoff.yaml
