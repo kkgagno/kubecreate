@@ -6,3 +6,5 @@ nginxlb: 192.168.122.132
 metallb: 192.168.122.240-192.168.122.250
 #Kubernetes Version (ex. "1.32")
 k8sversion: "1.30"
+#Jarvice version (ex. "3.25.1-202503171803")
+jarviceversion: "3.25.1-202503171803"
