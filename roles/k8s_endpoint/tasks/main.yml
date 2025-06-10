@@ -1,10 +1,3 @@
-- name: Import vars
-  run_once: true
-  include_vars:
-    file: inventory/local/cluster-variable.yaml
-    name: vardata
-
-
 - name: Check if nginx is running
   shell: "ps cax |grep nginx"
   register: running_process
