@@ -15,7 +15,7 @@
 - name: Create namespace for Jarvice
   become: true
   kubernetes.core.k8s:
-    kubeconfig: /root/.kube/config
+    kubeconfig: /etc/kubeconfig
     api_version: v1
     kind: Namespace
     name: jarvice-system
@@ -32,4 +32,4 @@
     release_state: present
     values_files:
       - override.yaml
-    kubeconfig: /root/.kube/config
+    kubeconfig: /etc/kubeconfig
