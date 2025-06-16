@@ -88,36 +88,36 @@
       - "helm install -n kube-system traefik traefik/traefik --kubeconfig /root/.kube/config"
 
 
-- name: Create values.yaml for kured
-  file:
-      path: "/etc/kuredvalues.yaml"
-      state: touch
+#- name: Create values.yaml for kured
+#  file:
+#      path: "/etc/kuredvalues.yaml"
+#      state: touch
       
 
-- name: values.yaml add data to file
-  blockinfile:
-    path: "/etc/kuredvalues.yaml"  
-    state: present
-    block: |
-      extraArgs:
-        reboot-days: mon,tue,wed,thu
-        start-time: 00:00
-        end-time: 06:00
-        time-zone: America/New_York
-      serviceAccount:
-        create: true
-        name: kured
-      updateStrategy: RollingUpdate
+#- name: values.yaml add data to file
+#  blockinfile:
+#    path: "/etc/kuredvalues.yaml"  
+#    state: present
+#    block: |
+#      extraArgs:
+#        reboot-days: mon,tue,wed,thu
+#        start-time: 00:00
+#        end-time: 06:00
+#        time-zone: America/New_York
+#      serviceAccount:
+#        create: true
+#        name: kured
+#      updateStrategy: RollingUpdate
 
 
-- name: Add kured repo, create  namespace, and install
-  become: true
-  command: "{{ item }}"
-  with_items:
-      - "helm repo add kubereboot https://kubereboot.github.io/charts"
-      - "helm repo update"
-      - "helm upgrade --install kured kubereboot/kured --namespace kube-system -f /etc/kuredvalues.yaml --kubeconfig /root/.kube/config" 
-  ignore_errors: true
+#- name: Add kured repo, create  namespace, and install
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "helm repo add kubereboot https://kubereboot.github.io/charts"
+#      - "helm repo update"
+#      - "helm upgrade --install kured kubereboot/kured --namespace kube-system -f /etc/kuredvalues.yaml --kubeconfig /root/.kube/config" 
+#  ignore_errors: true
 
 - name: Add nfs provisioner and install
   become: true
