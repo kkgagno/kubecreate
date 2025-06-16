@@ -1,31 +1,35 @@
-- name: Import vars
-  run_once: true
-  include_vars:
-    file: k8svars.yml
-    name: vardata
+#- name: Import vars
+#  run_once: true
+#  include_vars:
+#    file: k8svars.yml
+#    name: vardata
 
-- name: Jarvice Install
-  become: true
-  shell: "{{ item }}"
-  with_items:    
-    - "kubectl create ns jarvice-system --kubeconfig /root/.kube/config"
-    - "helm upgrade jarvice jarvice --version {{ vardata.jarviceversion }} --repo https://nimbix.github.io/jarvice-helm/ --namespace jarvice-system --install --values override.yaml"
-  register: command_output
-
-
-#- name: Create Jarvice namespace
+#- name: Jarvice Install
 #  become: true
-#  kubernetes.core.k8s:
-#    name: jarvice-system
-#    api_version: v1
-#    kind: Namespace
-#    state: present
-#    kubeconfig: /root/.kube/config
+#  shell: "{{ item }}"
+#  with_items:    
+#    - "kubectl create ns jarvice-system --kubeconfig /root/.kube/config"
+#    - "helm upgrade jarvice jarvice --version {{ vardata.jarviceversion }} --repo https://nimbix.github.io/jarvice-helm/ --namespace jarvice-system --install --values override.yaml"
+#  register: command_output
 
-#- name: Deploy Grafana chart on 5.0.12 with values loaded from template
-# kubernetes.core.helm:
-#    name: jarvice
-#    repo_url: "https://nimbix.github.io/jarvice-helm/"
-#    release_namespace: jarvice-system
-#    chart_version: 3.25.1-202503171803
-#    values: "override.yaml"
+- name: Create namespace for Jarvice
+  become: true
+  kubernetes.core.k8s:
+    kubeconfig: /root/.kube/config
+    api_version: v1
+    kind: Namespace
+    name: jarvice-system
+    state: present
+
+- name: Install/Upgrade Jarvice Helm chart
+  become: true
+  community.kubernetes.helm:
+    name: jarvice
+    chart_ref: jarvice
+    chart_repo_url: https://nimbix.github.io/jarvice-helm/
+    namespace: jarvice-system
+    version: "{{ vardata.jarviceversion }}"
+    release_state: present
+    values_files:
+      - override.yaml
+    kubeconfig: /root/.kube/config
