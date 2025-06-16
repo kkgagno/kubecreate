@@ -23,7 +23,7 @@
 
 - name: Install/Upgrade Jarvice Helm chart
   become: true
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: jarvice
     chart_ref: jarvice
     chart_repo_url: https://nimbix.github.io/jarvice-helm/
