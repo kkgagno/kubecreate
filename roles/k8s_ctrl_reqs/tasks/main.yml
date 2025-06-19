@@ -22,10 +22,12 @@
   register: command_output   
 
 - name: If KubeAPI  running get join command
+  become: true
   shell: "kubeadm token create --print-join-command > /etc/joincluster"
   when: running_process.stdout_lines|length > 0
 
 - name: read join file into var
+  become: true
   shell: "cat /etc/joincluster"
   when: running_process.stdout_lines|length > 0
   register: joincluster
@@ -35,6 +37,7 @@
   when: running_process.stdout_lines|length > 0
 
 - name: Create join file on ansible host
+  become: true
   file:
       path: "/etc/joincluster"
       state: touch
@@ -42,6 +45,7 @@
   when: running_process.stdout_lines|length > 0
 
 - name: add contents to ansible host join file
+  become: true
   copy:
       dest: "/etc/joincluster"
       content: |
@@ -50,7 +54,7 @@
   when: running_process.stdout_lines|length > 0
 
 - name: read kubecfg into var
-  become: false
+  become: true
   shell: "cat $HOME/.kube/config"
   register: kubecfg
   when: running_process.stdout_lines|length > 0
