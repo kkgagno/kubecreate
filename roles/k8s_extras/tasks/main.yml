@@ -112,7 +112,7 @@
   become: true
   kubernetes.core.helm:
     name: traefik
-    chart_ref: traefik/traefik
+    chart_ref: traefik
     chart_repo_url: https://traefik.github.io/charts
     namespace: kube-system
     #create_namespace: true
@@ -160,7 +160,7 @@
   become: true
   kubernetes.core.helm:
     name: nfs-subdir-external-provisioner
-    chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+    chart_ref: nfs-subdir-external-provisioner
     chart_repo_url: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
     namespace: kube-system
     #create_namespace: true
@@ -286,7 +286,7 @@
 - name: Install/Upgrade Prometheus/Grafana Helm chart
   become: true
   kubernetes.core.helm:
-    name: prometheus
+    name: prometheus-community
     chart_ref: prometheus-community/kube-prometheus-stack
     chart_repo_url: https://prometheus-community.github.io/helm-charts
     namespace: prometheus-stack
@@ -301,10 +301,10 @@
   become: true  
   command: "{{ item }}"
   with_items:
-      - "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts"
-      - "helm repo update"
-      - "kubectl create ns prometheus-stack --kubeconfig /root/.kube/config"
-      - "helm install -n prometheus-stack prometheus prometheus-community/kube-prometheus-stack -f k8s_promvalues.yaml --kubeconfig /root/.kube/config"
+      #- "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts"
+      #- "helm repo update"
+      #- "kubectl create ns prometheus-stack --kubeconfig /root/.kube/config"
+      #- "helm install -n prometheus-stack prometheus prometheus-community/kube-prometheus-stack -f k8s_promvalues.yaml --kubeconfig /root/.kube/config"
       - "kubectl patch svc prometheus-grafana -n prometheus-stack -p '[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"LoadBalancer\"}]' --type='json' --kubeconfig /root/.kube/config"
 
 
@@ -401,7 +401,7 @@
 - name: Install/Upgrade Loki Helm chart
   become: true
   kubernetes.core.helm:
-    name: loki
+    name: grafana
     chart_ref: grafana/loki-stack
     chart_repo_url: https://grafana.github.io/helm-charts
     namespace: prometheus-stack
