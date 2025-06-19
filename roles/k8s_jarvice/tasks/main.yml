@@ -4,13 +4,13 @@
     file: k8svars.yml
     name: vardata
 
-- name: Jarvice Install
-  become: true
-  shell: "{{ item }}"
-  with_items:    
-    - "kubectl create ns jarvice-system --kubeconfig /root/.kube/config"
+#- name: Jarvice Install
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:    
+#    - "kubectl create ns jarvice-system --kubeconfig /root/.kube/config"
 #    - "helm upgrade jarvice jarvice --version {{ vardata.jarviceversion }} --repo https://nimbix.github.io/jarvice-helm/ --namespace jarvice-system --install --values override.yaml"
-  register: command_output
+#  register: command_output
 
 #- name: Create namespace for Jarvice
 #  become: true
