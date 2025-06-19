@@ -287,7 +287,7 @@
   become: true
   kubernetes.core.helm:
     name: prometheus-community
-    chart_ref: prometheus-community/kube-prometheus-stack
+    chart_ref: kube-prometheus-stack
     chart_repo_url: https://prometheus-community.github.io/helm-charts
     namespace: prometheus-stack
     create_namespace: true
@@ -402,7 +402,7 @@
   become: true
   kubernetes.core.helm:
     name: grafana
-    chart_ref: grafana/loki-stack
+    chart_ref: loki-stack
     chart_repo_url: https://grafana.github.io/helm-charts
     namespace: prometheus-stack
     #create_namespace: true
