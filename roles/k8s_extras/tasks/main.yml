@@ -38,17 +38,14 @@
     name: grafana
     repo_url: https://grafana.github.io/helm-charts
 
+#- name: Add Kured repository
+#  kubernetes.core.helm_repository:
+#    name: kubereboot
+#    repo_url: https://kubereboot.github.io/charts
+
+
 ####################################
 
-
-
-#- name: Restart kubedns and wait, cis settings crash dns pods
-#  become: true
-#  shell: "{{ item }}"
-#  with_items: 
-#    - "kubectl rollout restart deployment coredns -n kube-system --kubeconfig /root/.kube/config"
-#    - "kubectl wait --for=condition=Ready pods --all -n kube-system --timeout 480s --kubeconfig /root/.kube/config"   
-#  ignore_errors: true
   
 - name: Install Metallb
   become: true
@@ -95,18 +92,6 @@
     - "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
     - "kubectl apply -f metallb.yaml --kubeconfig /root/.kube/config"
 
-#- name: Add traefik repo and install traefik
-#  become: true
-#  shell: "{{ item }}"
-#  with_items:
-#      - "helm repo add traefik https://traefik.github.io/charts"
-#      - "helm repo update"
-#      #- "sudo su -"
-#      #- "export KUBECONFIG=/root/.kube/config"
-#      #- "mkdir ~/.kube"     
-#      #- "kubectl config view --raw >~/.kube/config"
-#      #- "kubectl create ns traefik-v2"
-#      - "helm install -n kube-system traefik traefik/traefik --kubeconfig /root/.kube/config"
                                                               
 - name: Install/Upgrade Traefik Helm chart
   become: true
@@ -121,39 +106,6 @@
     #values_files:
     #  - override.yaml	 
     kubeconfig: /etc/kubeconfig
-
-###KURED, COMMENTED OUT AS NOT BEING USED FOR PATCHING
-#- name: Create values.yaml for kured
-#  file:
-#      path: "/etc/kuredvalues.yaml"
-#      state: touch
-      
-
-#- name: values.yaml add data to file
-#  blockinfile:
-#    path: "/etc/kuredvalues.yaml"  
-#    state: present
-#    block: |
-#      extraArgs:
-#        reboot-days: mon,tue,wed,thu
-#        start-time: 00:00
-#        end-time: 06:00
-#        time-zone: America/New_York
-#      serviceAccount:
-#        create: true
-#        name: kured
-#      updateStrategy: RollingUpdate
-
-
-#- name: Add kured repo, create  namespace, and install
-#  become: true
-#  command: "{{ item }}"
-#  with_items:
-#      - "helm repo add kubereboot https://kubereboot.github.io/charts"
-#      - "helm repo update"
-#      - "helm upgrade --install kured kubereboot/kured --namespace kube-system -f /etc/kuredvalues.yaml --kubeconfig /root/.kube/config" 
-#  ignore_errors: true
-
 
 
 - name: Install/Upgrade NFS Helm chart
@@ -209,84 +161,14 @@
   command: "{{ item }}"
   with_items:
       - "kubectl create -f /etc/sc.yaml"
+  ignore_errors: true
 
-#- name: Create prometheus persisten volume yaml on host
-#  file:
-#      path: "/etc/prompv.yaml"
-#      state: touch
-
-#- name: storage class yaml add data to file
-#  blockinfile:
-#    path: "/etc/prompv.yaml"  
-#    state: present
-#    block: |	  
-#      apiVersion: v1
-#      kind: PersistentVolume
-#      metadata:
-#        finalizers:
-#        - kubernetes.io/pv-protection
-#        name: prometheus-grafana
-#        namespace: prometheus-stack
-#      spec:
-#        accessModes:
-#        - ReadWriteOnce
-#        capacity:
-#          storage: 10Gi
-#        hostPath:
-#          path: /mnt
-#          type: ""
-#        persistentVolumeReclaimPolicy: Retain
-#        storageClassName: local-storage
-#        volumeMode: Filesystem
-
-#- name: Create persistent volume for Prometheus-Grafana
-#  become: true
-#  command: "{{ item }}"
-#  with_items:
-#      - "kubectl create -f /etc/prompv.yaml"
-
-
-#- name: Create prometheus yaml on host
-#  file:
-#  file:
-#      path: "/etc/promvalues.yaml"
-#      state: touch
-
-
-#- name: promvalues.yaml add data to file
-#  blockinfile:
-#    path: "/etc/promvalues.yaml"  
-#    state: present
-#    block: |
-#      prometheus:
-#        storage:
-#          volumeClaimTemplate:
-#           spec:
-#             storageClassName: nfs-client
-#             accessModes: ["ReadWriteONce"]
-#             resources:
-#               requests:
-#                 storage: 10Gi      
-#      tolerations:
-#      - effect: NoSchedule
-#        key: node-role.jarvice.io/jarvice-system
-#        operator: Exists
-
-#      grafana:
-#        persistence:
-#           enabled: true
-#           size: 10Gi
-#           storageClass: nfs-client
-#      tolerations:
-#      - effect: NoSchedule
-#        key: node-role.jarvice.io/jarvice-system
-#        operator: Exists
 
 ###########################PROMETHEUS/GRAFANA INSTALL#############
 - name: Install/Upgrade Prometheus/Grafana Helm chart
   become: true
   kubernetes.core.helm:
-    name: prometheus-community
+    name: prometheus
     chart_ref: kube-prometheus-stack
     chart_repo_url: https://prometheus-community.github.io/helm-charts
     namespace: prometheus-stack
@@ -305,7 +187,7 @@
       #- "helm repo update"
       #- "kubectl create ns prometheus-stack --kubeconfig /root/.kube/config"
       #- "helm install -n prometheus-stack prometheus prometheus-community/kube-prometheus-stack -f k8s_promvalues.yaml --kubeconfig /root/.kube/config"
-      - "kubectl patch svc prometheus-community-grafana  -n prometheus-stack -p '[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"LoadBalancer\"}]' --type='json' --kubeconfig /root/.kube/config"
+      - "kubectl patch svc prometheus-grafana  -n prometheus-stack -p '[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"LoadBalancer\"}]' --type='json' --kubeconfig /root/.kube/config"
 
 
 ###########################LOKI INSTALL#############
@@ -387,21 +269,10 @@
      
 
 
-#- name: Add Loki to prometheus stack
-#  become: true
-#  command: "{{ item }}"
-#  with_items:
-#      - "helm repo add grafana https://grafana.github.io/helm-charts"
-#      - "helm repo update"
-#      - "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --kubeconfig /root/.kube/config"
-#      #- "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --set loki.persistence.enabled=true set loki.persistence.storageClassName=nfs-client"
-#  ignore_errors: true
-
-
 - name: Install/Upgrade Loki Helm chart
   become: true
   kubernetes.core.helm:
-    name: grafana
+    name: loki
     chart_ref: loki-stack
     chart_repo_url: https://grafana.github.io/helm-charts
     namespace: prometheus-stack
@@ -411,3 +282,140 @@
     values_files:
       - /etc/lokivalues.yaml
     kubeconfig: /etc/kubeconfig 
+
+    #############OLD with commands, worth keeping########################3
+#- name: Restart kubedns and wait, cis settings crash dns pods
+#  become: true
+#  shell: "{{ item }}"
+#  with_items: 
+#    - "kubectl rollout restart deployment coredns -n kube-system --kubeconfig /root/.kube/config"
+#    - "kubectl wait --for=condition=Ready pods --all -n kube-system --timeout 480s --kubeconfig /root/.kube/config"   
+#  ignore_errors: true
+
+#- name: Add traefik repo and install traefik
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:
+#      - "helm repo add traefik https://traefik.github.io/charts"
+#      - "helm repo update"
+#      #- "sudo su -"
+#      #- "export KUBECONFIG=/root/.kube/config"
+#      #- "mkdir ~/.kube"     
+#      #- "kubectl config view --raw >~/.kube/config"
+#      #- "kubectl create ns traefik-v2"
+#      - "helm install -n kube-system traefik traefik/traefik --kubeconfig /root/.kube/config"
+
+###KURED, COMMENTED OUT AS NOT BEING USED FOR PATCHING
+#- name: Create values.yaml for kured
+#  file:
+#      path: "/etc/kuredvalues.yaml"
+#      state: touch
+      
+
+#- name: values.yaml add data to file
+#  blockinfile:
+#    path: "/etc/kuredvalues.yaml"  
+#    state: present
+#    block: |
+#      extraArgs:
+#        reboot-days: mon,tue,wed,thu
+#        start-time: 00:00
+#        end-time: 06:00
+#        time-zone: America/New_York
+#      serviceAccount:
+#        create: true
+#        name: kured
+#      updateStrategy: RollingUpdate
+
+
+#- name: Add kured repo, create  namespace, and install
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "helm repo add kubereboot https://kubereboot.github.io/charts"
+#      - "helm repo update"
+#      - "helm upgrade --install kured kubereboot/kured --namespace kube-system -f /etc/kuredvalues.yaml --kubeconfig /root/.kube/config" 
+#  ignore_errors: true
+
+
+#- name: Create prometheus persisten volume yaml on host
+#  file:
+#      path: "/etc/prompv.yaml"
+#      state: touch
+
+#- name: storage class yaml add data to file
+#  blockinfile:
+#    path: "/etc/prompv.yaml"  
+#    state: present
+#    block: |	  
+#      apiVersion: v1
+#      kind: PersistentVolume
+#      metadata:
+#        finalizers:
+#        - kubernetes.io/pv-protection
+#        name: prometheus-grafana
+#        namespace: prometheus-stack
+#      spec:
+#        accessModes:
+#        - ReadWriteOnce
+#        capacity:
+#          storage: 10Gi
+#        hostPath:
+#          path: /mnt
+#          type: ""
+#        persistentVolumeReclaimPolicy: Retain
+#        storageClassName: local-storage
+#        volumeMode: Filesystem
+
+#- name: Create persistent volume for Prometheus-Grafana
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "kubectl create -f /etc/prompv.yaml"
+
+
+#- name: Create prometheus yaml on host
+#  file:
+#  file:
+#      path: "/etc/promvalues.yaml"
+#      state: touch
+
+
+#- name: promvalues.yaml add data to file
+#  blockinfile:
+#    path: "/etc/promvalues.yaml"  
+#    state: present
+#    block: |
+#      prometheus:
+#        storage:
+#          volumeClaimTemplate:
+#           spec:
+#             storageClassName: nfs-client
+#             accessModes: ["ReadWriteONce"]
+#             resources:
+#               requests:
+#                 storage: 10Gi      
+#      tolerations:
+#      - effect: NoSchedule
+#        key: node-role.jarvice.io/jarvice-system
+#        operator: Exists
+
+#      grafana:
+#        persistence:
+#           enabled: true
+#           size: 10Gi
+#           storageClass: nfs-client
+#      tolerations:
+#      - effect: NoSchedule
+#        key: node-role.jarvice.io/jarvice-system
+#        operator: Exists
+
+#- name: Add Loki to prometheus stack
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "helm repo add grafana https://grafana.github.io/helm-charts"
+#      - "helm repo update"
+#      - "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --kubeconfig /root/.kube/config"
+#      #- "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --set loki.persistence.enabled=true set loki.persistence.storageClassName=nfs-client"
+#  ignore_errors: true

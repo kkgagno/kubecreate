@@ -4,22 +4,6 @@
     file: k8svars.yml
     name: vardata
 
-#- name: Jarvice Install
-#  become: true
-#  shell: "{{ item }}"
-#  with_items:    
-#    - "kubectl create ns jarvice-system --kubeconfig /root/.kube/config"
-#    - "helm upgrade jarvice jarvice --version {{ vardata.jarviceversion }} --repo https://nimbix.github.io/jarvice-helm/ --namespace jarvice-system --install --values override.yaml"
-#  register: command_output
-
-#- name: Create namespace for Jarvice
-#  become: true
-#  kubernetes.core.k8s:
-#    kubeconfig: /etc/kubeconfig
-#    api_version: v1
-#    kind: Namespace
-#    name: jarvice-system
-#    state: present
 
 - name: Install/Upgrade Jarvice Helm chart
   become: true
@@ -34,3 +18,13 @@
     values_files:
       - override.yaml
     kubeconfig: /etc/kubeconfig
+
+
+    ###############commands################################
+#- name: Jarvice Install
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:    
+#    - "kubectl create ns jarvice-system --kubeconfig /root/.kube/config"
+#    - "helm upgrade jarvice jarvice --version {{ vardata.jarviceversion }} --repo https://nimbix.github.io/jarvice-helm/ --namespace jarvice-system --install --values override.yaml"
+#  register: command_output
