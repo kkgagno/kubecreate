@@ -102,7 +102,7 @@
     chart_repo_url: https://traefik.github.io/charts
     namespace: kube-system    
     release_state: present 
-    kubeconfig: /root/.kube/config
+    kubeconfig: /tmp/config
 
 ##################NFS provisioner############################################################
 - name: Install/Upgrade NFS Helm chart
@@ -117,7 +117,7 @@
       - value: nfs.server=192.168.122.5
       - value: nfs.path=/data/nfs
       - value: storageClass.onDelete=true
-    kubeconfig: /root/.kube/config
+    kubeconfig: /tmp/config
 
 - name: Make nfs-client storageclass default storage class
   become: true
@@ -174,7 +174,7 @@
     release_state: present
     values_files:
       - k8s_promvalues.yaml	 
-    kubeconfig: /root/.kube/config
+    kubeconfig: /tmp/config
 
 - name: Add prometheus/grafana repo, create  namespace, and install
   become: true  
@@ -276,7 +276,7 @@
     release_state: present
     values_files:
       - /etc/lokivalues.yaml
-    kubeconfig: /root/.kube/config 
+    kubeconfig: /tmp/config
 
 
 
