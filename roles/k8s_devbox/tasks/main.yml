@@ -4,6 +4,7 @@
     file: k8svars.yml
     name: vardata
 
+##################Kubectl / Kubeadm install on devbox##################################################
 - name: Download Releasekey  
   become: true
   shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes"
@@ -33,44 +34,7 @@
     - kubeadm
     - kubectl
 
-
-
-#- name: Set up kubectl for the root user
-#  become: true
-#  command: "{{ item }}"
-#  with_items:
-#      - "sudo mkdir -p /root/.kube"
-#      - "sudo chown -R root /root/.kube"
-#      - "sudo cp /etc/kubeconfig /root/.kube/config"
-#      - "chmod 600 /root/.kube/config"
-
-
-#- name: Download cilium
-#  ansible.builtin.get_url:
-#    url: https://github.com/cilium/cilium-cli/releases/download/v0.16.22/cilium-linux-amd64.tar.gz
-#    dest: /etc/cilium-linux-amd64.tar.gz
-#    mode: '0440'
-
-#- name: Extract cilium.tgz into /usr/local/bin
-#  ansible.builtin.unarchive:
-#    src: /etc/cilium-linux-amd64.tar.gz
-#    dest: /usr/local/bin
-#    #remote_src: yes
-
-#- name: Remove file (delete file)
-#  ansible.builtin.file:
-#    path: /etc/cilium-linux-amd64.tar.gz
-#    state: absent
-
-#- name: install cilium
-#  become: true
-#  shell: "cilium install --set ipam.operator.clusterPoolIPv4PodCIDRList={{ vardata.podnetwork }} --set ipv6.enabled=false"
-#  register: cilium
-#- debug:
-#     msg:
-#      - "{{ cilium.stdout }}"
-
-
+##################Helm install on devbox############################################################
 - name: Download Helm
   become: true
   ansible.builtin.get_url:
@@ -107,6 +71,45 @@
     dest: /usr/local/bin/
     mode: '0700'
     #remote_src: yes
+
+
+
+#END
+#######Old commands#################################################################
+#- name: Set up kubectl for the root user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p /root/.kube"
+#      - "sudo chown -R root /root/.kube"
+#      - "sudo cp /etc/kubeconfig /root/.kube/config"
+#      - "chmod 600 /root/.kube/config"
+
+
+#- name: Download cilium
+#  ansible.builtin.get_url:
+#    url: https://github.com/cilium/cilium-cli/releases/download/v0.16.22/cilium-linux-amd64.tar.gz
+#    dest: /etc/cilium-linux-amd64.tar.gz
+#    mode: '0440'
+
+#- name: Extract cilium.tgz into /usr/local/bin
+#  ansible.builtin.unarchive:
+#    src: /etc/cilium-linux-amd64.tar.gz
+#    dest: /usr/local/bin
+#    #remote_src: yes
+
+#- name: Remove file (delete file)
+#  ansible.builtin.file:
+#    path: /etc/cilium-linux-amd64.tar.gz
+#    state: absent
+
+#- name: install cilium
+#  become: true
+#  shell: "cilium install --set ipam.operator.clusterPoolIPv4PodCIDRList={{ vardata.podnetwork }} --set ipv6.enabled=false"
+#  register: cilium
+#- debug:
+#     msg:
+#      - "{{ cilium.stdout }}"
 
 #- name: Add cilium repo and install cilium
 #  become: true
