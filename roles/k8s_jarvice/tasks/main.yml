@@ -28,7 +28,7 @@
     chart_ref: jarvice
     chart_repo_url: https://nimbix.github.io/jarvice-helm/
     namespace: jarvice-system
-    version: "{{ vardata.jarviceversion }}"
+    chart_version: "{{ vardata.jarviceversion }}"
     release_state: present
     values_files:
       - override.yaml
