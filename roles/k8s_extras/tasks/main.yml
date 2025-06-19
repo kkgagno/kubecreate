@@ -17,7 +17,28 @@
   when: running_process.stdout_lines|length > 0
   ignore_errors: true
 
+##ADD HELM REPOS################
+- name: Add traefik repository
+  kubernetes.core.helm_repository:
+    name: traefik
+    repo_url: https://traefik.github.io/charts
 
+- name: Add nfs-provisioner repository
+  kubernetes.core.helm_repository:
+    name: nfs-subdir-external-provisioner
+    repo_url: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+
+- name: Add prometheus-grafana repository
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: https://prometheus-community.github.io/helm-charts
+
+- name: Add prometheus-grafana repository
+  kubernetes.core.helm_repository:
+    name: grafana
+    repo_url: https://grafana.github.io/helm-charts
+    
+####################################
 
 
 
@@ -74,20 +95,34 @@
     - "kubectl wait --for=condition=Ready pods --all -n metallb-system --timeout 480s --kubeconfig /root/.kube/config"
     - "kubectl apply -f metallb.yaml --kubeconfig /root/.kube/config"
 
-- name: Add traefik repo and install traefik
+#- name: Add traefik repo and install traefik
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:
+#      - "helm repo add traefik https://traefik.github.io/charts"
+#      - "helm repo update"
+#      #- "sudo su -"
+#      #- "export KUBECONFIG=/root/.kube/config"
+#      #- "mkdir ~/.kube"     
+#      #- "kubectl config view --raw >~/.kube/config"
+#      #- "kubectl create ns traefik-v2"
+#      - "helm install -n kube-system traefik traefik/traefik --kubeconfig /root/.kube/config"
+                                                              
+- name: Install/Upgrade Traefik Helm chart
   become: true
-  shell: "{{ item }}"
-  with_items:
-      - "helm repo add traefik https://traefik.github.io/charts"
-      - "helm repo update"
-      #- "sudo su -"
-      #- "export KUBECONFIG=/root/.kube/config"
-      #- "mkdir ~/.kube"     
-      #- "kubectl config view --raw >~/.kube/config"
-      #- "kubectl create ns traefik-v2"
-      - "helm install -n kube-system traefik traefik/traefik --kubeconfig /root/.kube/config"
+  kubernetes.core.helm:
+    name: traefik
+    chart_ref: traefik/traefik
+    chart_repo_url: https://traefik.github.io/charts
+    namespace: kube-system
+    #create_namespace: true
+    #chart_version: "{{ vardata.jarviceversion }}"
+    release_state: present
+    #values_files:
+    #  - override.yaml	 
+    kubeconfig: /etc/kubeconfig
 
-
+###KURED, COMMENTED OUT AS NOT BEING USED FOR PATCHING
 #- name: Create values.yaml for kured
 #  file:
 #      path: "/etc/kuredvalues.yaml"
@@ -119,13 +154,31 @@
 #      - "helm upgrade --install kured kubereboot/kured --namespace kube-system -f /etc/kuredvalues.yaml --kubeconfig /root/.kube/config" 
 #  ignore_errors: true
 
-- name: Add nfs provisioner and install
+
+
+- name: Install/Upgrade NFS Helm chart
+  become: true
+  kubernetes.core.helm:
+    name: nfs-subdir-external-provisioner
+    chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+    chart_repo_url: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+    namespace: kube-system
+    #create_namespace: true
+    #chart_version: "{{ vardata.jarviceversion }}"
+    release_state: present
+    set_values:
+      - value: nfs.server=192.168.122.5
+      - value: nfs.path=/data/nfs
+      - value: storageClass.onDelete=true
+    kubeconfig: /etc/kubeconfig
+
+- name: Make nfs-client storageclass default storage class
   become: true
   command: "{{ item }}"
   with_items:
-      - "helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner"
-      - "helm repo update"
-      - "helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=192.168.122.5 --set nfs.path=/data/nfs --set storageClass.onDelete=true --kubeconfig /root/.kube/config"
+      #- "helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner"
+      #- "helm repo update"
+      #- "helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=192.168.122.5 --set nfs.path=/data/nfs --set storageClass.onDelete=true --kubeconfig /root/.kube/config"
       - "kubectl patch storageclass nfs-client -p '{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}' --kubeconfig /root/.kube/config"
   ignore_errors: true
 
@@ -229,6 +282,21 @@
 #        key: node-role.jarvice.io/jarvice-system
 #        operator: Exists
 
+
+- name: Install/Upgrade Prometheus/Grafana Helm chart
+  become: true
+  kubernetes.core.helm:
+    name: prometheus
+    chart_ref: prometheus-community/kube-prometheus-stack
+    chart_repo_url: https://prometheus-community.github.io/helm-charts
+    namespace: prometheus-stack
+    create_namespace: true
+    #chart_version: "{{ vardata.jarviceversion }}"
+    release_state: present
+    values_files:
+      - k8s_promvalues.yaml	 
+    kubeconfig: /etc/kubeconfig
+
 - name: Add prometheus/grafana repo, create  namespace, and install
   become: true  
   command: "{{ item }}"
@@ -239,6 +307,8 @@
       - "helm install -n prometheus-stack prometheus prometheus-community/kube-prometheus-stack -f k8s_promvalues.yaml --kubeconfig /root/.kube/config"
       - "kubectl patch svc prometheus-grafana -n prometheus-stack -p '[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"LoadBalancer\"}]' --type='json' --kubeconfig /root/.kube/config"
 
+
+###########################LOKI INSTALL#############
 - name: Create loki persistent volume yaml file
   file:
       path: "/etc/lokipv.yaml"
@@ -317,12 +387,27 @@
      
 
 
-- name: Add Loki to prometheus stack
+#- name: Add Loki to prometheus stack
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "helm repo add grafana https://grafana.github.io/helm-charts"
+#      - "helm repo update"
+#      - "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --kubeconfig /root/.kube/config"
+#      #- "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --set loki.persistence.enabled=true set loki.persistence.storageClassName=nfs-client"
+#  ignore_errors: true
+
+
+- name: Install/Upgrade Loki Helm chart
   become: true
-  command: "{{ item }}"
-  with_items:
-      - "helm repo add grafana https://grafana.github.io/helm-charts"
-      - "helm repo update"
-      - "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --kubeconfig /root/.kube/config"
-      #- "helm upgrade --install loki grafana/loki-stack --values /etc/lokivalues.yaml -n prometheus-stack --set loki.persistence.enabled=true set loki.persistence.storageClassName=nfs-client"
-  ignore_errors: true
+  kubernetes.core.helm:
+    name: loki
+    chart_ref: grafana/loki-stack
+    chart_repo_url: https://grafana.github.io/helm-charts
+    namespace: prometheus-stack
+    #create_namespace: true
+    #chart_version: "{{  }}"
+    release_state: present
+    values_files:
+      - /etc/lokivalues.yaml
+    kubeconfig: /etc/kubeconfig 
