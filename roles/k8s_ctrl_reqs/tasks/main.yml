@@ -115,9 +115,9 @@
 - name: Download Releasekey  
   become: true
   ansible.builtin.get_url: 
-  url: "https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key"
-  dest: "/etc/apt/keyrings/kubernetes-Release.key"
-  mode: '0644'
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key"
+    dest: "/etc/apt/keyrings/kubernetes-Release.key"
+    mode: '0644'
 
 - name: Convert Release key to GPG keyring
   ansible.builtin.command:
