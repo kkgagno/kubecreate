@@ -1,0 +1,48 @@
+---
+- name: Compliance scan with Goss
+  hosts: kube_control_plane, kube_node
+  become: yes
+  vars:
+    goss_install_path: "/usr/local/bin/goss"
+    goss_yaml_src: "files/goss.yaml"
+    goss_yaml_dest: "/tmp/goss.yaml"
+
+  tasks:
+    - name: Ensure curl is installed
+      apt:
+        name: curl
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Download Goss binary if not present
+      ansible.builtin.get_url:
+        url: https://github.com/goss-org/goss/releases/latest/download/goss-linux-amd64
+        dest: "{{ goss_install_path }}"
+        mode: '0755'
+      args:
+        creates: "{{ goss_install_path }}"
+
+    - name: Copy goss.yaml to target
+      copy:
+        src: "{{ goss_yaml_src }}"
+        dest: "{{ goss_yaml_dest }}"
+        mode: '0644'
+
+    - name: Validate server compliance with Goss
+      command: "{{ goss_install_path }} -g {{ goss_yaml_dest }} validate --format junit"
+      register: goss_result
+      ignore_errors: true
+
+    - name: Show Goss output
+      debug:
+        var: goss_result.stdout
+
+    - name: Fail if Goss validation fails
+      fail:
+        msg: "Goss compliance failed. See output above."
+      when: goss_result.rc != 0
+
+    - name: Save Goss junit report (optional)
+      copy:
+        content: "{{ goss_result.stdout }}"
+        dest: "/tmp/goss-results.xml"
