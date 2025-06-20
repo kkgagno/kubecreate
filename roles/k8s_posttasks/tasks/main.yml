@@ -74,6 +74,7 @@
     #- "kubectl delete pod alertmanager-prometheus-kube-prometheus-alertmanager-0 -n prometheus-stack"
     #- "kubectl patch pod alertmanager-prometheus-kube-prometheus-alertmanager-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
 
+    #Need to delete prometheus-grafana-0 pod, loki-0, alertmanager-prometheus-kube-prometheus-alertmanager-0
 
 
 
