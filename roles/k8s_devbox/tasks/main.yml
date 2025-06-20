@@ -75,14 +75,33 @@
 #  with_items:
 #          - "sudo tar -xvf /etc/helm-v3.16.3-linux-amd64.tar.gz"
   
-
-
-- name: Extract helm.gz
+- name: Extract Helm archive to /tmp (safe location)
   become: true
   ansible.builtin.unarchive:
     src: /etc/helm-v3.16.3-linux-amd64.tar.gz
-    dest: /etc/
-    #remote_src: yes
+    dest: /tmp
+    #remote_src: true
+
+- name: Move helm binary to /usr/local/bin
+  become: true
+  ansible.builtin.copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: '0755'
+    remote_src: true
+
+- name: Clean up extracted files
+  become: true
+  ansible.builtin.file:
+    path: /tmp/linux-amd64
+    state: absent
+
+#- name: Extract helm.gz
+#  become: true
+#  ansible.builtin.unarchive:
+#    src: /etc/helm-v3.16.3-linux-amd64.tar.gz
+#    dest: /etc/
+#    #remote_src: yes
 
 - name: Remove helm tar file (delete file)
   become: true
@@ -90,13 +109,13 @@
     path: /etc/helm-v3.16.3-linux-amd64.tar.gz
     state: absent
 
-- name: Copy file with owner and permissions
-  become: true
-  ansible.builtin.copy:
-    src: /etc/linux-amd64/
-    dest: /usr/local/bin/
-    mode: '0700'
-    #remote_src: yes
+#- name: Copy file with owner and permissions
+#  become: true
+#  ansible.builtin.copy:
+#    src: /etc/linux-amd64/
+#    dest: /usr/local/bin/
+#    mode: '0700'
+#    #remote_src: yes
 
 
 
