@@ -4,6 +4,7 @@
     file: inventory/local/cluster-variable.yaml
     name: vardata
 
+##Check if metallb namespace there, end if so#######################################
 - name: Check if metallb is running
   shell: "kubectl get namespace |grep metallb-system"
   register: running_process
@@ -123,9 +124,6 @@
   become: true
   command: "{{ item }}"
   with_items:
-      #- "helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner"
-      #- "helm repo update"
-      #- "helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=192.168.122.5 --set nfs.path=/data/nfs --set storageClass.onDelete=true --kubeconfig /root/.kube/config"
       - "kubectl patch storageclass nfs-client -p '{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}' --kubeconfig /root/.kube/config"
   ignore_errors: true
 
@@ -179,13 +177,8 @@
 - name: Add prometheus/grafana repo, create  namespace, and install
   become: true  
   command: "{{ item }}"
-  with_items:
-      #- "helm repo add prometheus-community https://prometheus-community.github.io/helm-charts"
-      #- "helm repo update"
-      #- "kubectl create ns prometheus-stack --kubeconfig /root/.kube/config"
-      #- "helm install -n prometheus-stack prometheus prometheus-community/kube-prometheus-stack -f k8s_promvalues.yaml --kubeconfig /root/.kube/config"
+  with_items:      
       - "kubectl patch svc prometheus-grafana  -n prometheus-stack -p '[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"LoadBalancer\"}]' --type='json' --kubeconfig /root/.kube/config"
-
 
 ###########################LOKI INSTALL#############
 - name: Create loki persistent volume yaml file
