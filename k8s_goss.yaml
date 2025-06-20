@@ -19,7 +19,8 @@
         url: https://github.com/goss-org/goss/releases/latest/download/goss-linux-amd64
         dest: "{{ goss_install_path }}"
         mode: '0755'
-      when: not lookup('ansible.builtin.filepath', goss_install_path, errors='ignore').exists
+      when: lookup('ansible.builtin.filepath', goss_install_path, errors='ignore') == ''- name: Download Goss binary if not present
+
 
     - name: Copy goss.yaml to target
       copy:
