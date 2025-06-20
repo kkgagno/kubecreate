@@ -1,45 +1,26 @@
-#- name: Check if kubeapi is running
-#  shell: "pgrep kube-apiserver"
-#  register: running_process
-#  ignore_errors: true
-#  #failed_when: running_process.rc < 1
-#- debug:
-#    msg: "Kube API is running"
-#  when: running_process.stdout_lines|length > 0
-#  ignore_errors: true
-#- meta: end_host
-#  when: running_process.stdout_lines|length > 0
-#  ignore_errors: true
+#################Check if Kubeapi is running and end if so#########
 
-#- name: time synch...for when restoring from snap
-#  become: true
-#  shell: "{{ item }}"
-#  with_items:    
-#    - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
-#  register: command_output
+- name: Check if kubeapi is running
+  shell: "pgrep kube-apiserver"
+  register: running_process
+  ignore_errors: true
+  #failed_when: running_process.rc < 1
+- debug:
+    msg: "Kube API is running"
+  when: running_process.stdout_lines|length > 0
+  ignore_errors: true
+- meta: end_host
+  when: running_process.stdout_lines|length > 0
+  ignore_errors: true
 
-############################################
-#- name: Load join command
-#  delegate_to: localhost
-#  command: cat /etc/ctrljoincluster
-#  register: command_output
-#- set_fact:
-#   joincluster = "{{ command_output.stdout }}"
-#- debug:
-#    msg: 
-#     - "{{ command_output.stdout }}"
+- name: time synch...for when restoring from snap
+  become: true
+  shell: "{{ item }}"
+  with_items:    
+    - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
+  register: command_output
 
-
-#- name: Add to cluster
-#  become: true
-#  command: "{{ command_output.stdout }}"
-#  register: join_result
-#  ignore_errors: true
-#- set_fact:     
-#   joinresult = "{{ join_result.stdout }}"
-#- debug:
-#      msg: 
-#      - "{{ join_result.stdout }}"
+########Add controller to cluster####################################
 - name: Read join command from file
   delegate_to: localhost
   ansible.builtin.slurp:
@@ -63,20 +44,9 @@
 - name: Show join result
   ansible.builtin.debug:
     var: join_result.stdout
-#################################################
-
 
 
 ###############kube config file for user#############################
-#- name: Set up kubectl for the current user
-#  become: true
-#  command: "{{ item }}"
-#  with_items:
-#      - "sudo mkdir -p $HOME/.kube"
-#      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
-#      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
-#      - "sudo chown -R $USER $HOME/.kube"
-
 - name: Create .kube directory for the root user
   become: true
   file:
@@ -98,10 +68,9 @@
     path: "$HOME/.kube"
     recurse: true
 
-########################################
 
-
-
+#END
+#########OLD#######################################################
 ######### kubecfg to var################################
 #- name: read kubecfg into var
 #  become: true
@@ -153,3 +122,11 @@
 #    content: "{{ kubecfg.stdout }}"
 #    dest: "$HOME/.kube/config"
 
+#- name: Set up kubectl for the current user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p $HOME/.kube"
+#      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
+#      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+#      - "sudo chown -R $USER $HOME/.kube"
