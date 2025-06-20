@@ -47,11 +47,12 @@
 - name: Copy admin.conf to user kube config
   become: true
   copy:
-    remote_src: /etc/kubernetes/admin.conf
+    src: /etc/kubernetes/admin.conf
     dest: "$HOME/.kube/config"
     #owner: "{{ ansible_user }}"
     #group: "{{ ansible_user }}"
     mode: '0644'
+    remote_src: yes
 
 - name: Ensure ownership of .kube directory
   become: true
