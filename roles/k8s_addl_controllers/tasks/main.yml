@@ -1,22 +1,22 @@
-- name: Check if kubeapi is running
-  shell: "pgrep kube-apiserver"
-  register: running_process
-  ignore_errors: true
-  #failed_when: running_process.rc < 1
-- debug:
-    msg: "Kube API is running"
-  when: running_process.stdout_lines|length > 0
-  ignore_errors: true
-- meta: end_host
-  when: running_process.stdout_lines|length > 0
-  ignore_errors: true
+#- name: Check if kubeapi is running
+#  shell: "pgrep kube-apiserver"
+#  register: running_process
+#  ignore_errors: true
+#  #failed_when: running_process.rc < 1
+#- debug:
+#    msg: "Kube API is running"
+#  when: running_process.stdout_lines|length > 0
+#  ignore_errors: true
+#- meta: end_host
+#  when: running_process.stdout_lines|length > 0
+#  ignore_errors: true
 
-- name: time synch...for when restoring from snap
-  become: true
-  shell: "{{ item }}"
-  with_items:    
-    - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
-  register: command_output
+#- name: time synch...for when restoring from snap
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:    
+#    - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
+#  register: command_output
 
 ############################################
 #- name: Load join command
@@ -90,6 +90,7 @@
     src: /etc/kubernetes/admin.conf
     dest: "$HOME/.kube/config"
     mode: '0644'
+    remote_src: yes
 
 - name: Ensure ownership of .kube directory
   become: true
