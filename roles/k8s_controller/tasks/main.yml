@@ -187,7 +187,7 @@
   copy:
       dest: "/etc/ctrljoincluster"
       content: |
-        {{ joincluster }} --control-plane --certificate-key  {{ {{ cert_file['content'] | b64decode }} }}                       
+        {{ joincluster }} --control-plane --certificate-key  {{ cert_file['content'] | b64decode }}                       
   delegate_to: localhost
 ######### kubecfg to var################################
 #- name: read kubecfg into var
