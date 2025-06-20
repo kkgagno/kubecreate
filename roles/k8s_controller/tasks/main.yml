@@ -40,8 +40,6 @@
   file:
     path: "$HOME/.kube"
     state: directory
-    #owner: "{{ ansible_user }}"
-    #group: "{{ ansible_user }}"
     mode: '0755'
 
 - name: Copy admin.conf to user kube config
@@ -49,8 +47,6 @@
   copy:
     src: /etc/kubernetes/admin.conf
     dest: "$HOME/.kube/config"
-    #owner: "{{ ansible_user }}"
-    #group: "{{ ansible_user }}"
     mode: '0644'
     remote_src: yes
 
@@ -58,8 +54,6 @@
   become: true
   file:
     path: "$HOME/.kube"
-    #owner: "{{ ansible_user }}"
-    #group: "{{ ansible_user }}"
     recurse: true
 
 ########################################
@@ -180,7 +174,7 @@
   copy:
       dest: "/etc/joincluster"
       content: |
-        {{ joincluster.stdout }}                        
+        {{ joincluster }}                        
   delegate_to: localhost
 
 - name: Create controller join file
