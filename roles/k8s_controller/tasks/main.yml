@@ -4,36 +4,28 @@
     file: k8svars.yml
     name: vardata
 
-#- name: Check if kubeapi is running
-#  shell: "pgrep kube-apiserver"
-#  register: running_process
-#  ignore_errors: true
-#  #failed_when: running_process.rc < 1
-#- debug:
-#    msg: "Kube API is running"
-#  when: running_process.stdout_lines|length > 0
-#  ignore_errors: true
-#- meta: end_host
-#  when: running_process.stdout_lines|length > 0
-#  ignore_errors: true
+- name: Check if kubeapi is running
+  shell: "pgrep kube-apiserver"
+  register: running_process
+  ignore_errors: true
+  #failed_when: running_process.rc < 1
+- debug:
+    msg: "Kube API is running"
+  when: running_process.stdout_lines|length > 0
+  ignore_errors: true
+- meta: end_host
+  when: running_process.stdout_lines|length > 0
+  ignore_errors: true
 
-#- name: Initialize Kubernetes master
-#  command: kubeadm init --control-plane-endpoint={{ vardata.nginxlb }} --upload-certs  #--pod-network-cidr={{ vardata.podnetwork }} 
-  
-#  register: kubeadm_output
-#  ignore_errors: true
-#- debug:
-#    msg: "{{ kubeadm_output.stdout }}"
+- name: Initialize Kubernetes master
+  command: kubeadm init --control-plane-endpoint={{ vardata.nginxlb }} --upload-certs  #--pod-network-cidr={{ vardata.podnetwork }} 
+ 
+  register: kubeadm_output
+  ignore_errors: true
+- debug:
+    msg: "{{ kubeadm_output.stdout }}"
 
 ###############kube config file for user#############################
-#- name: Set up kubectl for the current user
-#  become: true
-#  command: "{{ item }}"
-#  with_items:
-#      - "sudo mkdir -p $HOME/.kube"
-#      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
-#      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
-#      - "sudo chown -R $USER $HOME/.kube"
 
 - name: Create .kube directory for the root user
   become: true
@@ -56,7 +48,7 @@
     path: "$HOME/.kube"
     recurse: true
 
-########################################
+###################Cilium############################
 
 - name: Download cilium
   ansible.builtin.get_url:
@@ -85,7 +77,7 @@
       - "{{ cilium.stdout }}"
 
 
-
+###########Create join command#################################
 - name: Command for workers to join
   shell: "kubeadm token create --print-join-command > /etc/joincluster"
   register: joincmd
@@ -94,14 +86,6 @@
        - "{{ joincmd.stdout }}"
 - set_fact:
      join = "{{ joincmd.stdout }}"   
-
-#################################################
-#- name: read file into var
-#  shell: "cat /etc/joincluster"
-#  register: joincluster
-#- debug:
-#    msg:
-#     - "{{ joincluster }}"
 
 - name: Read /etc/joincluster into variable (base64)
   ansible.builtin.slurp:
@@ -115,7 +99,6 @@
 - name: Debug joincluster content
   ansible.builtin.debug:
     msg: "{{ joincluster }}"
-####################################################
 
 - name: Get cert for controller join
   shell: "kubeadm init phase upload-certs --upload-certs > /etc/temp.txt"
@@ -124,16 +107,6 @@
      msg:
        - "{{ file.stdout }}"
   
-
-########################################################
-#- name: Get last line from cert file, actual cert
-#  shell: "tail -1 /etc/temp.txt > /etc/cert"
-#  register: certs
-##- debug:
-##     msg:
-##       - "{{ certs.stdout }}"
-##- set_fact:
-##     cert = "{{ certs.stdout }}"
 - name: Get last line from cert file
   command: "tail -n 1 /etc/temp.txt"
   register: last_line
@@ -145,15 +118,7 @@
     owner: root
     group: root
     mode: '0644'
-#############################################################
 
-#- name: read cert into var
-#  #become: no
-#  shell: "cat /etc/cert"
-#  register: cert
-#- debug:
-#    msg:
-#      - "{{ cert.stdout }}"
 - name: Read cert file into variable (base64 encoded)
   ansible.builtin.slurp:
     src: /etc/cert
@@ -162,8 +127,8 @@
 - name: Show cert content (decoded)
   debug:
     msg: "{{ cert_file['content'] | b64decode }}"
-##############################################################
 
+###########Create joincluster file on ansible host########################################
 - name: Create join file
   file:
       path: "/etc/joincluster"
@@ -189,15 +154,8 @@
       content: |
         {{ joincluster }} --control-plane --certificate-key  {{ cert_file['content'] | b64decode }}                       
   delegate_to: localhost
-######### kubecfg to var################################
-#- name: read kubecfg into var
-#  become: true
-#  shell: "cat $HOME/.kube/config"
-#  register: kubecfg
-#- debug:
-#    msg:
-#      - "{{ kubecfg.stdout }}"
 
+#########kubeconfig to ansible host################################
 - name: Read kubeconfig into variable
   become: true
   ansible.builtin.slurp:
@@ -225,16 +183,42 @@
         {{ kubecfg }}                        
   delegate_to: localhost
 
-#- name: Set up kubectl for the root user
-#  become: true
-#  command: "{{ item }}"
-#  with_items:
-#      - "sudo mkdir -p $HOME/.kube"
-#      - "sudo chown -R $USER $HOME/.kube"
-
 - name: add master kubeconfig local root
   become: true
   copy:
     content: "{{ kubecfg }}"
     dest: "$HOME/.kube/config"
 
+#END
+#############################OLD#################
+#- name: Set up kubectl for the current user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p $HOME/.kube"
+#      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
+#      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+#      - "sudo chown -R $USER $HOME/.kube"
+
+#- name: read file into var
+#  shell: "cat /etc/joincluster"
+#  register: joincluster
+#- debug:
+#    msg:
+#     - "{{ joincluster }}"
+
+#- name: Get last line from cert file, actual cert
+#  shell: "tail -1 /etc/temp.txt > /etc/cert"
+#  register: certs
+##- debug:
+##     msg:
+##       - "{{ certs.stdout }}"
+##- set_fact:
+##     cert = "{{ certs.stdout }}"
+
+#- name: Set up kubectl for the root user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p $HOME/.kube"
+#      - "sudo chown -R $USER $HOME/.kube"
