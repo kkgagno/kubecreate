@@ -156,7 +156,7 @@
   ignore_errors: true
 
 
-###########################PROMETHEUS/GRAFANA INSTALL#############
+###########################PROMETHEUS/GRAFANA INSTALL################################
 - name: Install/Upgrade Prometheus/Grafana Helm chart
   become: true
   kubernetes.core.helm:
@@ -177,7 +177,7 @@
   with_items:      
       - "kubectl patch svc prometheus-grafana  -n prometheus-stack -p '[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"LoadBalancer\"}]' --type='json' --kubeconfig /root/.kube/config"
 
-###########################LOKI INSTALL#############
+###########################LOKI INSTALL####################################################
 - name: Create loki persistent volume yaml file
   file:
       path: "/etc/lokipv.yaml"
