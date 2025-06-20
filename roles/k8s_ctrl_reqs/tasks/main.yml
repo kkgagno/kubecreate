@@ -262,6 +262,7 @@
     name: kubelet
     state: restarted
 
+#END
 #########################################################################################
 #- name: system parameters for K8s initiate
 #  become: true
