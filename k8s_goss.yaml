@@ -27,11 +27,13 @@
         src: "{{ goss_yaml_src }}"
         dest: "{{ goss_yaml_dest }}"
         mode: '0644'
+        remote_src: yes
 
     - name: Validate server compliance with Goss
       command: "{{ goss_install_path }} -g {{ goss_yaml_dest }} validate --format junit"
       register: goss_result
       ignore_errors: true
+      remote_src: yes
 
     - name: Show Goss output
       debug:
