@@ -172,10 +172,7 @@
     - kubectl
 
 ######Set System parameters for kubernetes###############################################
-- name: Configure system parameters for K8s initialization
-  become: true
-  hosts: all
-  tasks:
+
 - name: Disable swap immediately
   command: swapoff -a
 
