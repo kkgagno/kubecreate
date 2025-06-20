@@ -11,15 +11,6 @@
     state: directory
     mode: '0755'
 
-
-#- name: Download Releasekey  
-#  become: true
-#  shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes"
-#  register: key
-#- debug:
-#     msg:
-#       - "{{ key.stdout }}"
-
 - name: Download Releasekey  
   become: true
   ansible.builtin.get_url: 
@@ -33,14 +24,6 @@
   args:
     creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-
-#- name: echo to sources list
-#  become: true
-#  shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
-#  register: list
-#- debug:
-#     msg:
-#       - "{{ list.stdout }}"
 - name: Add Kubernetes APT repository
   ansible.builtin.apt_repository:
     repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /"
@@ -60,20 +43,32 @@
     - kubeadm
     - kubectl
 
+##################Copy kube config file to root#####################################################
+- name: Copy kubeconfig to root user config
+  block:
+    - name: Ensure .kube directory exists for root
+      file:
+        path: /root/.kube
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Copy kubeconfig to /root/.kube/config
+      copy:
+        src: /etc/kubeconfig
+        dest: /root/.kube/config
+        owner: root
+        group: root
+        mode: '0600'
+
 ##################Helm install on devbox############################################################
 - name: Download Helm
   become: true
   ansible.builtin.get_url:
     url: https://get.helm.sh/helm-v3.16.3-linux-amd64.tar.gz
     dest: /tmp/helm-v3.16.3-linux-amd64.tar.gz
-    mode: '0700'
-    #mode: '0440'
-
-#- name: extract helm helm.gz
-#  become: true
-#  shell: "{{ item }}"
-#  with_items:
-#          - "sudo tar -xvf /etc/helm-v3.16.3-linux-amd64.tar.gz"
+    mode: '0700'    
   
 - name: Ensure temp dir exists
   ansible.builtin.file:
@@ -83,28 +78,21 @@
 
 - name: Extract Helm archive locally to /tmp/helm
   ansible.builtin.unarchive:
-    src: /etc/helm-v3.16.3-linux-amd64.tar.gz  # local file
+    src: /etc/helm-v3.16.3-linux-amd64.tar.gz  
     dest: /tmp/helm
-    remote_src: true   # VERY important: file is local!
+    remote_src: true   
 
 - name: Move helm binary to /usr/local/bin
   ansible.builtin.copy:
     src: /tmp/helm/linux-amd64/helm
     dest: /usr/local/bin/helm
     mode: '0755'
-    remote_src: true   # Because source is on the target (localhost)
+    remote_src: true   
 
 - name: Clean up extracted temp files
   ansible.builtin.file:
     path: /tmp/helm
     state: absent
-
-#- name: Extract helm.gz
-#  become: true
-#  ansible.builtin.unarchive:
-#    src: /etc/helm-v3.16.3-linux-amd64.tar.gz
-#    dest: /etc/
-#    #remote_src: yes
 
 - name: Remove helm tar file (delete file)
   become: true
@@ -112,15 +100,11 @@
     path: /tmp/helm-v3.16.3-linux-amd64.tar.gz
     state: absent
 
-#- name: Copy file with owner and permissions
-#  become: true
-#  ansible.builtin.copy:
-#    src: /etc/linux-amd64/
-#    dest: /usr/local/bin/
-#    mode: '0700'
-#    #remote_src: yes
-
-
+- name: Remove etc/kubeconfig (delete file)
+  become: true
+  ansible.builtin.file:
+    path: /etc/kubeconfig
+    state: absent
 
 #END
 #######Old commands#################################################################
@@ -174,3 +158,43 @@
 #- name: Install Calico network plugin
 #  become: no
 #  shell: "kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml"
+
+
+
+#- name: Download Releasekey  
+#  become: true
+#  shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes"
+#  register: key
+#- debug:
+#     msg:
+#       - "{{ key.stdout }}"
+
+#- name: echo to sources list
+#  become: true
+#  shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
+#  register: list
+#- debug:
+#     msg:
+#       - "{{ list.stdout }}"
+
+#- name: extract helm helm.gz
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:
+#          - "sudo tar -xvf /etc/helm-v3.16.3-linux-amd64.tar.gz"
+
+#- name: Extract helm.gz
+#  become: true
+#  ansible.builtin.unarchive:
+#    src: /etc/helm-v3.16.3-linux-amd64.tar.gz
+#    dest: /etc/
+#    #remote_src: yes
+
+
+#- name: Copy file with owner and permissions
+#  become: true
+#  ansible.builtin.copy:
+#    src: /etc/linux-amd64/
+#    dest: /usr/local/bin/
+#    mode: '0700'
+#    #remote_src: yes
