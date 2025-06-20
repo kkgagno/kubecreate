@@ -40,8 +40,8 @@
   file:
     path: "$HOME/.kube"
     state: directory
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    #owner: "{{ ansible_user }}"
+    #group: "{{ ansible_user }}"
     mode: '0755'
 
 - name: Copy admin.conf to user kube config
@@ -49,16 +49,16 @@
   copy:
     src: /etc/kubernetes/admin.conf
     dest: "$HOME/.kube/config"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    #owner: "{{ ansible_user }}"
+    #group: "{{ ansible_user }}"
     mode: '0644'
 
 - name: Ensure ownership of .kube directory
   become: true
   file:
-    path: "/{{ ansible_user }}/.kube"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
+    path: "$HOME/.kube"
+    #owner: "{{ ansible_user }}"
+    #group: "{{ ansible_user }}"
     recurse: true
 
 ########################################
