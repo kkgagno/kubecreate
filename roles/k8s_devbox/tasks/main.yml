@@ -65,7 +65,7 @@
   become: true
   ansible.builtin.get_url:
     url: https://get.helm.sh/helm-v3.16.3-linux-amd64.tar.gz
-    dest: /etc/helm-v3.16.3-linux-amd64.tar.gz
+    dest: /tmp/helm-v3.16.3-linux-amd64.tar.gz
     mode: '0700'
     #mode: '0440'
 
@@ -78,7 +78,7 @@
 - name: Extract Helm archive to /tmp (safe location)
   become: true
   ansible.builtin.unarchive:
-    src: /etc/helm-v3.16.3-linux-amd64.tar.gz
+    src: /tmp/helm-v3.16.3-linux-amd64.tar.gz
     dest: /tmp
     #remote_src: true
 
@@ -106,7 +106,7 @@
 - name: Remove helm tar file (delete file)
   become: true
   ansible.builtin.file:
-    path: /etc/helm-v3.16.3-linux-amd64.tar.gz
+    path: /tmp/helm-v3.16.3-linux-amd64.tar.gz
     state: absent
 
 #- name: Copy file with owner and permissions
