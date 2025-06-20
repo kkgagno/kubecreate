@@ -222,7 +222,7 @@
   copy:
       dest: "/etc/kubeconfig"
       content: |
-        {{ kubecfg.stdout }}                        
+        {{ kubecfg }}                        
   delegate_to: localhost
 
 #- name: Set up kubectl for the root user
@@ -235,6 +235,6 @@
 - name: add master kubeconfig local root
   become: true
   copy:
-    content: "{{ kubecfg.stdout }}"
+    content: "{{ kubecfg }}"
     dest: "$HOME/.kube/config"
 
