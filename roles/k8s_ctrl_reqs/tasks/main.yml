@@ -92,10 +92,10 @@
     state: present
     update_cache: true
 
-- name: enable IPv4 forwarding
-  shell: |
-     sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
-     sysctl -p
+#- name: enable IPv4 forwarding
+#  shell: |
+#     sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/' /etc/sysctl.conf
+#     sysctl -p
 
 - name: Create keyrings directory
   ansible.builtin.file:
@@ -103,21 +103,41 @@
     state: directory
     mode: '0755'
 
+
+#- name: Download Releasekey  
+#  become: true
+#  shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes"
+#  register: key
+#- debug:
+#     msg:
+#       - "{{ key.stdout }}"
+
 - name: Download Releasekey  
   become: true
-  shell: "curl -fsSL https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg --yes"
-  register: key
-- debug:
-     msg:
-       - "{{ key.stdout }}"
+  ansible.builtin.get_url: 
+  url: "https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key"
+  dest: "/etc/apt/keyrings/kubernetes-Release.key"
+  mode: '0644'
 
-- name: echo to sources list
-  become: true
-  shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
-  register: list
-- debug:
-     msg:
-       - "{{ list.stdout }}"
+- name: Convert Release key to GPG keyring
+  ansible.builtin.command:
+    cmd: "gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /etc/apt/keyrings/kubernetes-Release.key"
+  args:
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+
+#- name: echo to sources list
+#  become: true
+#  shell: "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list"
+#  register: list
+#- debug:
+#     msg:
+#       - "{{ list.stdout }}"
+- name: Add Kubernetes APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /"
+    filename: kubernetes
+    state: present
 
 
 - name: Update apt repo and cache on all Debian/Ubuntu boxes
@@ -151,24 +171,119 @@
     - kubelet
     - kubectl
 
-- name: system parameters for K8s initiate
+######Set System parameters for kubernetes###############################################
+- name: Configure system parameters for K8s initialization
   become: true
-  shell: "{{ item }}"
-  with_items:
-          - "swapoff -a"
-          - "sed -e '/swap/ s/^#*/#/' -i /etc/fstab"
-          - "systemctl mask swap.target"
-          - "sysctl -w net.ipv6.conf.all.disable_ipv6=1"
-          - "sed -i '/ swap / s/^\\(.*\\)$/#\\1/g' /etc/fstab"
-          - "printf '%s\\n' 'overlay' 'br_netfilter' >/etc/modules-load.d/containerd.conf"
-          - "modprobe overlay"
-          - "modprobe br_netfilter"
-          - "printf '%s\\n' 'net.bridge.bridge-nf-call-ip6tables = 1' 'net.bridge.bridge-nf-call-iptables = 1' 'net.ipv4.ip_forward = 1' >/etc/sysctl.d/kubernetes.conf"
-          - "sysctl --system"
-          - "printf '%s\\n' 'KUBELET_EXTRA_ARGS=\"--cgroup-driver=cgroupfs\"'  >/etc/default/kubelet"
-          - "systemctl daemon-reload && sudo systemctl restart kubelet"
+  hosts: all
+  tasks:
+- name: Disable swap immediately
+  command: swapoff -a
 
-  register: key
+- name: Comment out swap entries in /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^([^#].* swap )'
+    line: '#\1'
+    backrefs: yes
+
+- name: Mask swap.target
+  systemd:
+    name: swap.target
+    masked: yes
+
+- name: Disable IPv6
+  sysctl:
+    name: net.ipv6.conf.all.disable_ipv6
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Comment swap lines in /etc/fstab (alternative approach)
+  replace:
+    path: /etc/fstab
+    regexp: '^(\s*[^#].*\s+swap\s+)'
+    replace: '#\1'
+
+- name: Ensure containerd modules are loaded at boot
+  copy:
+    dest: /etc/modules-load.d/containerd.conf
+    content: |
+      overlay
+      br_netfilter
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Load overlay module now
+  modprobe:
+    name: overlay
+    state: present
+
+- name: Load br_netfilter module now
+  modprobe:
+    name: br_netfilter
+    state: present
+
+- name: Ensure Kubernetes sysctl settings
+  copy:
+    dest: /etc/sysctl.d/kubernetes.conf
+    content: |
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Apply sysctl settings
+  command: sysctl --system
+
+- name: Add KUBELET_EXTRA_ARGS to /etc/default/kubelet
+  copy:
+    dest: /etc/default/kubelet
+    content: |
+      KUBELET_EXTRA_ARGS="--cgroup-driver=cgroupfs"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Ensure net.ipv4.ip_forward is set to 1 persistently
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_file: /etc/sysctl.conf
+    state: present
+    reload: yes
+
+- name: Reload systemd manager configuration
+  systemd:
+    daemon_reload: yes
+
+- name: Restart kubelet
+  systemd:
+    name: kubelet
+    state: restarted
+
+#########################################################################################
+#- name: system parameters for K8s initiate
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:
+#          - "swapoff -a"
+#          - "sed -e '/swap/ s/^#*/#/' -i /etc/fstab"
+#          - "systemctl mask swap.target"
+#          - "sysctl -w net.ipv6.conf.all.disable_ipv6=1"
+#          - "sed -i '/ swap / s/^\\(.*\\)$/#\\1/g' /etc/fstab"
+#          - "printf '%s\\n' 'overlay' 'br_netfilter' >/etc/modules-load.d/containerd.conf"
+#          - "modprobe overlay"
+#          - "modprobe br_netfilter"
+#          - "printf '%s\\n' 'net.bridge.bridge-nf-call-ip6tables = 1' 'net.bridge.bridge-nf-call-iptables = 1' 'net.ipv4.ip_forward = 1' >/etc/sysctl.d/kubernetes.conf"
+#          - "sysctl --system"
+#          - "printf '%s\\n' 'KUBELET_EXTRA_ARGS=\"--cgroup-driver=cgroupfs\"'  >/etc/default/kubelet"
+#          - "systemctl daemon-reload && sudo systemctl restart kubelet"
+
+#  register: key
   #- debug:
   #   msg:
   #     - "{{ key.stdout }}"
