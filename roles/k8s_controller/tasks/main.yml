@@ -4,6 +4,7 @@
     file: k8svars.yml
     name: vardata
 
+#################Check if Kubeapi is running and end if so#########
 - name: Check if kubeapi is running
   shell: "pgrep kube-apiserver"
   register: running_process
