@@ -1,3 +1,4 @@
+############See if NGINX is running#################################
 - name: Check if nginx is running
   shell: "ps cax |grep nginx"
   register: running_process
@@ -20,6 +21,7 @@
 
 #date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 
+############Install NGINX and configure#####################################
 - name: Install nginx-core
   apt:
     name:  nginx-core
@@ -72,14 +74,31 @@
       }
   #when: running_process.stdout_lines|length = 0  
 
-- name: Restart nginx with new config file
+############Restart NGIX service and check#################################
+- name: Ensure nginx is restarted and running
   become: true
-  shell: "{{ item }}"
-  with_items:    
-    - "service nginx restart"
-    - "service nginx status"
-  register: command_output
-  #when: running_process.stdout_lines|length = 0
-#- debug:
-#    msg: 
-#      - "{{ command_output.stdout }}"
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+    enabled: true
+
+- name: Check nginx status
+  become: true
+  ansible.builtin.service_facts:
+
+- name: Show nginx status
+  debug:
+    var: ansible_facts.services['nginx.service']
+
+
+#- name: Restart nginx with new config file
+#  become: true
+#  shell: "{{ item }}"
+#  with_items:    
+#    - "service nginx restart"
+#    - "service nginx status"
+#  register: command_output
+#  #when: running_process.stdout_lines|length = 0
+##- debug:
+##    msg: 
+##      - "{{ command_output.stdout }}"
