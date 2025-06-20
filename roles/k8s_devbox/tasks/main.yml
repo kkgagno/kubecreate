@@ -100,12 +100,6 @@
     path: /tmp/helm-v3.16.3-linux-amd64.tar.gz
     state: absent
 
-- name: Remove etc/kubeconfig (delete file)
-  become: true
-  ansible.builtin.file:
-    path: /etc/kubeconfig
-    state: absent
-
 #END
 #######Old commands#################################################################
 #- name: Set up kubectl for the root user
