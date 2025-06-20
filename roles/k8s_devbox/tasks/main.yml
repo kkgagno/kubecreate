@@ -75,27 +75,28 @@
 #  with_items:
 #          - "sudo tar -xvf /etc/helm-v3.16.3-linux-amd64.tar.gz"
   
-- name: Extract Helm locally
-  become: true
+- name: Ensure temp dir exists
+  ansible.builtin.file:
+    path: /tmp/helm
+    state: directory
+    mode: '0755'
+
+- name: Extract Helm archive locally to /tmp/helm
   ansible.builtin.unarchive:
-    src: /tmp/helm-v3.16.3-linux-amd64.tar.gz   # local path on the control machine
-    dest: /usr/local/bin/                       # where you want Helm to go
-    remote_src: false                           # means "it's local, upload first"
-  delegate_to: localhost
-  run_once: true
+    src: /etc/helm-v3.16.3-linux-amd64.tar.gz  # local file
+    dest: /tmp/helm
+    remote_src: false   # VERY important: file is local!
 
 - name: Move helm binary to /usr/local/bin
-  become: true
   ansible.builtin.copy:
-    src: /tmp/linux-amd64/helm
+    src: /tmp/helm/linux-amd64/helm
     dest: /usr/local/bin/helm
     mode: '0755'
-    remote_src: false
+    remote_src: true   # Because source is on the target (localhost)
 
-- name: Clean up extracted files
-  become: true
+- name: Clean up extracted temp files
   ansible.builtin.file:
-    path: /tmp/linux-amd64
+    path: /tmp/helm
     state: absent
 
 #- name: Extract helm.gz
