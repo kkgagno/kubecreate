@@ -18,61 +18,143 @@
     - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
   register: command_output
 
-- name: Load join command
+############################################
+#- name: Load join command
+#  delegate_to: localhost
+#  command: cat /etc/ctrljoincluster
+#  register: command_output
+#- set_fact:
+#   joincluster = "{{ command_output.stdout }}"
+#- debug:
+#    msg: 
+#     - "{{ command_output.stdout }}"
+
+
+#- name: Add to cluster
+#  become: true
+#  command: "{{ command_output.stdout }}"
+#  register: join_result
+#  ignore_errors: true
+#- set_fact:     
+#   joinresult = "{{ join_result.stdout }}"
+#- debug:
+#      msg: 
+#      - "{{ join_result.stdout }}"
+- name: Read join command from file
   delegate_to: localhost
-  command: cat /etc/ctrljoincluster
-  register: command_output
-- set_fact:
-   joincluster = "{{ command_output.stdout }}"
-- debug:
-    msg: 
-     - "{{ command_output.stdout }}"
+  ansible.builtin.slurp:
+    src: /etc/ctrljoincluster
+  register: join_command_file
 
+- name: Set join command fact
+  ansible.builtin.set_fact:
+    join_command: "{{ join_command_file.content | b64decode | trim }}"
 
-- name: Add to cluster
+- name: Show join command
+  ansible.builtin.debug:
+    msg: "{{ join_command }}"
+
+- name: Add node to cluster
   become: true
-  command: "{{ command_output.stdout }}"
+  ansible.builtin.command: "{{ join_command }}"
   register: join_result
   ignore_errors: true
-- set_fact:     
-   joinresult = "{{ join_result.stdout }}"
-- debug:
-      msg: 
-      - "{{ join_result.stdout }}"
+
+- name: Show join result
+  ansible.builtin.debug:
+    var: join_result.stdout
+#################################################
 
 
 
+###############kube config file for user#############################
+#- name: Set up kubectl for the current user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p $HOME/.kube"
+#      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
+#      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+#      - "sudo chown -R $USER $HOME/.kube"
 
-- name: Set up kubectl for the current user
+- name: Create .kube directory for the root user
   become: true
-  command: "{{ item }}"
-  with_items:
-      - "sudo mkdir -p $HOME/.kube"
-      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
-      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
-      - "sudo chown -R $USER $HOME/.kube"
+  file:
+    path: "$HOME/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
 
-
-
-- name: read kubecfg into var
-  become: true
-  shell: "cat $HOME/.kube/config"
-  register: kubecfg
-- debug:
-    msg:
-      - "{{ kubecfg.stdout }}"
-
-
-- name: Set up kubectl for the root user
-  become: true
-  command: "{{ item }}"
-  with_items:
-      - "sudo mkdir -p $HOME/.kube"
-      - "sudo chown -R $USER $HOME/.kube"
-
-- name: add master kubeconfig local root
+- name: Copy admin.conf to user kube config
   become: true
   copy:
-    content: "{{ kubecfg.stdout }}"
+    src: /etc/kubernetes/admin.conf
     dest: "$HOME/.kube/config"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Ensure ownership of .kube directory
+  become: true
+  file:
+    path: "/{{ ansible_user }}/.kube"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: true
+
+########################################
+
+
+
+######### kubecfg to var################################
+#- name: read kubecfg into var
+#  become: true
+#  shell: "cat $HOME/.kube/config"
+#  register: kubecfg
+#- debug:
+#    msg:
+#      - "{{ kubecfg.stdout }}"
+
+#- name: Read kubeconfig into variable
+#  become: true
+#  ansible.builtin.slurp:
+#    src: "/root/.kube/config"
+#  register: kubecfg_raw
+
+#- name: Decode kubeconfig content
+#  set_fact:
+#    kubecfg: "{{ kubecfg_raw['content'] | b64decode }}"
+
+#- name: Show kubeconfig
+#  debug:
+#    msg: "{{ kubecfg }}"
+
+#- name: Create kubecfg file local
+#  file:
+#      path: "/etc/kubeconfig"
+#      state: touch
+#  delegate_to: localhost
+
+#- name: add contents to file
+#  copy:
+#      dest: "/etc/kubeconfig"
+#      content: |
+#        {{ kubecfg.stdout }}                        
+#  delegate_to: localhost
+  ############################################################
+
+
+#- name: Set up kubectl for the root user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p $HOME/.kube"
+#      - "sudo chown -R $USER $HOME/.kube"
+
+#- name: add master kubeconfig local root
+#  become: true
+#  copy:
+#    content: "{{ kubecfg.stdout }}"
+#    dest: "$HOME/.kube/config"
 

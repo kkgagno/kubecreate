@@ -25,14 +25,43 @@
 #- debug:
 #    msg: "{{ kubeadm_output.stdout }}"
 
-- name: Set up kubectl for the current user
+###############kube config file for user#############################
+#- name: Set up kubectl for the current user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p $HOME/.kube"
+#      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
+#      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+#      - "sudo chown -R $USER $HOME/.kube"
+
+- name: Create .kube directory for the root user
   become: true
-  command: "{{ item }}"
-  with_items:
-      - "sudo mkdir -p $HOME/.kube"
-      - "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config"
-      # - "sudo chown $(id -u):$(id -g) $HOME/.kube/config"
-      - "sudo chown -R $USER $HOME/.kube"
+  file:
+    path: "$HOME/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Copy admin.conf to user kube config
+  become: true
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "$HOME/.kube/config"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Ensure ownership of .kube directory
+  become: true
+  file:
+    path: "/{{ ansible_user }}/.kube"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: true
+
+########################################
 
 - name: Download cilium
   ansible.builtin.get_url:
@@ -71,12 +100,27 @@
 - set_fact:
      join = "{{ joincmd.stdout }}"   
 
-- name: read file into var
-  shell: "cat /etc/joincluster"
-  register: joincluster
-- debug:
-    msg:
-     - "{{ joincluster }}"
+#################################################
+#- name: read file into var
+#  shell: "cat /etc/joincluster"
+#  register: joincluster
+#- debug:
+#    msg:
+#     - "{{ joincluster }}"
+
+- name: Read /etc/joincluster into variable (base64)
+  ansible.builtin.slurp:
+    src: /etc/joincluster
+  register: joincluster_raw
+
+- name: Decode joincluster content
+  ansible.builtin.set_fact:
+    joincluster: "{{ joincluster_raw.content | b64decode }}"
+
+- name: Debug joincluster content
+  ansible.builtin.debug:
+    msg: "{{ joincluster }}"
+####################################################
 
 - name: Get cert for controller join
   shell: "kubeadm init phase upload-certs --upload-certs > /etc/temp.txt"
@@ -85,23 +129,45 @@
      msg:
        - "{{ file.stdout }}"
   
-- name: Get last line from cert file, actual cert
-  shell: "tail -1 /etc/temp.txt > /etc/cert"
-  register: certs
+
+########################################################
+#- name: Get last line from cert file, actual cert
+#  shell: "tail -1 /etc/temp.txt > /etc/cert"
+#  register: certs
+##- debug:
+##     msg:
+##       - "{{ certs.stdout }}"
+##- set_fact:
+##     cert = "{{ certs.stdout }}"
+- name: Get last line from cert file
+  command: "tail -n 1 /etc/temp.txt"
+  register: last_line
+
+- name: Write last line to /etc/cert
+  copy:
+    content: "{{ last_line.stdout }}"
+    dest: /etc/cert
+    owner: root
+    group: root
+    mode: '0644'
+#############################################################
+
+#- name: read cert into var
+#  #become: no
+#  shell: "cat /etc/cert"
+#  register: cert
 #- debug:
-#     msg:
-#       - "{{ certs.stdout }}"
-#- set_fact:
-#     cert = "{{ certs.stdout }}"
+#    msg:
+#      - "{{ cert.stdout }}"
+- name: Read cert file into variable (base64 encoded)
+  ansible.builtin.slurp:
+    src: /etc/cert
+  register: cert_file
 
-- name: read cert into var
-  #become: no
-  shell: "cat /etc/cert"
-  register: cert
-- debug:
-    msg:
-      - "{{ cert.stdout }}"
-
+- name: Show cert content (decoded)
+  debug:
+    msg: "{{ cert_file['content'] | b64decode }}"
+##############################################################
 
 - name: Create join file
   file:
@@ -128,14 +194,28 @@
       content: |
         {{ joincluster.stdout }} --control-plane --certificate-key  {{ cert.stdout }}                       
   delegate_to: localhost
+######### kubecfg to var################################
+#- name: read kubecfg into var
+#  become: true
+#  shell: "cat $HOME/.kube/config"
+#  register: kubecfg
+#- debug:
+#    msg:
+#      - "{{ kubecfg.stdout }}"
 
-- name: read kubecfg into var
+- name: Read kubeconfig into variable
   become: true
-  shell: "cat $HOME/.kube/config"
-  register: kubecfg
-- debug:
-    msg:
-      - "{{ kubecfg.stdout }}"
+  ansible.builtin.slurp:
+    src: "/root/.kube/config"
+  register: kubecfg_raw
+
+- name: Decode kubeconfig content
+  set_fact:
+    kubecfg: "{{ kubecfg_raw['content'] | b64decode }}"
+
+- name: Show kubeconfig
+  debug:
+    msg: "{{ kubecfg }}"
 
 - name: Create kubecfg file local
   file:
@@ -150,12 +230,12 @@
         {{ kubecfg.stdout }}                        
   delegate_to: localhost
 
-- name: Set up kubectl for the root user
-  become: true
-  command: "{{ item }}"
-  with_items:
-      - "sudo mkdir -p $HOME/.kube"
-      - "sudo chown -R $USER $HOME/.kube"
+#- name: Set up kubectl for the root user
+#  become: true
+#  command: "{{ item }}"
+#  with_items:
+#      - "sudo mkdir -p $HOME/.kube"
+#      - "sudo chown -R $USER $HOME/.kube"
 
 - name: add master kubeconfig local root
   become: true
