@@ -85,7 +85,7 @@
   ansible.builtin.unarchive:
     src: /etc/helm-v3.16.3-linux-amd64.tar.gz  # local file
     dest: /tmp/helm
-    remote_src: false   # VERY important: file is local!
+    remote_src: true   # VERY important: file is local!
 
 - name: Move helm binary to /usr/local/bin
   ansible.builtin.copy:
