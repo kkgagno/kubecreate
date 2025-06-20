@@ -1,3 +1,4 @@
+#################Check if Kubeapi is running and end if so#########
 - block:
 
    - name: Check if kubelet is running
@@ -16,27 +17,6 @@
         ignore_errors: "{{ ignore_flag | default(false) | bool }}"
 
 #######Join Cluster######################################################
-#- name: Load join command
-#  delegate_to: localhost
-#  command: cat /etc/joincluster
-#  register: command_output
-#- set_fact:
-#   joincluster = "{{ command_output.stdout }}"
-#- debug:
-#    msg: 
-#     - "{{ command_output.stdout }}"
-
-
-#- name: Add to cluster
-#  become: true
-#  command: "{{ command_output.stdout }}"
-#  register: join_result
-#  ignore_errors: true
-#- set_fact:     
-#   joinresult = "{{ join_result.stdout }}"
-#- debug:
-#      msg: 
-#      - "{{ join_result.stdout }}"
 - name: Load join command from file
   delegate_to: localhost
   ansible.builtin.slurp:
@@ -60,7 +40,9 @@
 - name: Show join result
   debug:
     msg: "{{ join_result.stdout }}"
-##############################################################
+
+#END
+######OLD############################################################
 
 #- name: Load kubecfg
 #  delegate_to: localhost
@@ -105,3 +87,24 @@
 #    dest: "$HOME/.kube/config"
   
 
+#- name: Load join command
+#  delegate_to: localhost
+#  command: cat /etc/joincluster
+#  register: command_output
+#- set_fact:
+#   joincluster = "{{ command_output.stdout }}"
+#- debug:
+#    msg: 
+#     - "{{ command_output.stdout }}"
+
+
+#- name: Add to cluster
+#  become: true
+#  command: "{{ command_output.stdout }}"
+#  register: join_result
+#  ignore_errors: true
+#- set_fact:     
+#   joinresult = "{{ join_result.stdout }}"
+#- debug:
+#      msg: 
+#      - "{{ join_result.stdout }}"
