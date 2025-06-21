@@ -1,7 +1,7 @@
 - name: Import vars
   run_once: true
   include_vars:
-    file: k8svars.yml
+    file: inventory/local/cluster-variable.yaml
     name: vardata
 
 #################Check if Kubeapi is running and end if so#########
@@ -71,7 +71,7 @@
 - name: install cilium
   become: true
   ignore_errors: true
-  shell: "cilium install --set ipam.operator.clusterPoolIPv4PodCIDRList={{ vardata.podnetwork }} --set ipv6.enabled=false"
+  shell: "cilium install --set ipam.operator.clusterPoolIPv4PodCIDRList={{ vardata.kube_pods_subnet }} --set ipv6.enabled=false"
   register: cilium
 - debug:
      msg:
