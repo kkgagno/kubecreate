@@ -69,7 +69,7 @@
     - "kubectl delete pod prometheus-grafana-0 -n prometheus-stack"
     - "kubectl delete pod loki-0 -n prometheus-stack"
     - "kubectl delete pod alertmanager-prometheus-kube-prometheus-alertmanager-0 -n prometheus-stack"    
-    #- "kubectl delete pod prometheus-prometheus-kube-prometheus-prometheus-0 -n prometheus-stack"
+    - "kubectl delete pod prometheus-prometheus-kube-prometheus-prometheus-0 -n prometheus-stack"
    
     
 
