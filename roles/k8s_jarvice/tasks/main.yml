@@ -10,6 +10,7 @@
     src: /root/.kube/config
     dest: /tmp/config
     remote_src: true
+    mode: '0644'
 
 - name: Install/Upgrade Jarvice Helm chart
   become: true
