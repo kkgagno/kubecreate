@@ -18,6 +18,7 @@
     kind: Namespace
     name: my-namespace
     kubeconfig: /tmp/config
+    remote_src: true
 
 - name: Install/Upgrade Jarvice Helm chart
   become: true
