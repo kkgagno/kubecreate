@@ -47,6 +47,7 @@
 - name: Copy kubeconfig to root user config
   block:
     - name: Ensure .kube directory exists for root
+      become: true
       file:
         path: /root/.kube
         state: directory
