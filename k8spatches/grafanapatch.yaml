@@ -1,3 +1,8 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: prometheus-grafana
+  namespace: prometheus-stack
 spec:
   tolerations:
   - effect: NoSchedule

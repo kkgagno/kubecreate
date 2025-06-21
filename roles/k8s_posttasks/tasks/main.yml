@@ -1,17 +1,10 @@
-#####For later##########################################################################
-# - name: Show all the hosts in the inventory
-#   ansible.builtin.debug:
-#     msg: "{{ item }}"
-#   loop: "{{ groups['kube_control_plane'] }}"
-#   delegate_to: localhost
-
+######Set jarvice labels on compute and system nodes################################
 - name: Set control plane nodes jarvice labels
   k8s:
     state: patched
     kind: Node
     name: "{{ item }}"
-    definition:
-      #apiversion: v1      
+    definition:            
       metadata:
         labels:
           node-role.kubernetes.io/jarvice-system: ""
@@ -23,41 +16,101 @@
     state: patched
     kind: Node
     name: "{{ item }}"
-    definition:
-      #apiversion: v1      
+    definition:            
       metadata:
         labels:
           node-role.kubernetes.io/jarvice-compute: ""
   with_items: "{{ groups['kube_node'] }}"
   delegate_to: localhost
-############label nodes and apply taints#################################################
-# - name: Set control plane nodes jarvice labels
-#   become: true
-#   shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
-#   with_items: "{{ groups['kube_control_plane'] }}"
 
-# - name: Set control plane nodes jarvice taints
-#   become: true
-#   shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule;"
-#   with_items: "{{ groups['kube_control_plane'] }}"
-#   ignore_errors: true
+############Apply taints to nodes#################################################
+- name: Set control plane nodes jarvice taints
+  become: true
+  command: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule;"
+  with_items: "{{ groups['kube_control_plane'] }}"
+  ignore_errors: true
 
-# - name: Remove control plane labels
-#   become: true
-#   shell: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
-#   with_items: "{{ groups['kube_control_plane'] }}"
-#   ignore_errors: true
+- name: Set worker nodes jarvice taints
+  become: true
+  command: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule;"
+  with_items: "{{ groups['kube_node'] }}"
+  ignore_errors: true
 
-# - name: Set worker nodes jarvice labels
-#   become: true
-#   shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-compute=true"
-#   with_items: "{{ groups['kube_node'] }}"
+- name: Remove control plane taint
+  become: true
+  command: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
 
-# - name: Set worker nodes jarvice taints
-#   become: true
-#   shell: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule;"
-#   with_items: "{{ groups['kube_node'] }}"
-#   ignore_errors: true
+- name: Apply tolerations to Traefik Deployment
+  kubernetes.core.k8s:    
+    state: present
+    namespace: kube-system
+    src: k8spatches/traefikpatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+
+- name: Apply tolerations to coredns Deployment
+  kubernetes.core.k8s:    
+    state: present
+    namespace: kube-system
+    src: k8spatches/corednspatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+
+- name: Apply tolerations to nfs Deployment
+  kubernetes.core.k8s:    
+    state: present
+    namespace: kube-system
+    src: k8spatches/nfspatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+
+- name: Apply tolerations to metallb Deployment
+  kubernetes.core.k8s:    
+    state: present
+    namespace: metallb-system
+    src: k8spatches/metallbpatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+
+- name: Apply tolerations to cilium Deployment
+  kubernetes.core.k8s:    
+    state: present
+    namespace: kube-system
+    src: k8spatches/ciliumpatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+
+- name: Apply tolerations to prom metrics Deployment
+  kubernetes.core.k8s:    
+    state: present
+    namespace: prometheus-stack
+    src: k8spatches/prommetpatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+
+- name: Apply tolerations to prom operator Deployment
+  kubernetes.core.k8s:    
+    state: present
+    namespace: prometheus-stack
+    src: k8spatches/promoppatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+
+- name: Apply tolerations to grafana Stateful set
+  kubernetes.core.k8s:    
+    state: present
+    namespace: prometheus-stack
+    src: k8spatches/grafanapatch.yaml
+    validate_certs: false
+  delegate_to: localhost
+#END###################################################################################################
+
+# - name: Show all the hosts in the inventory
+#   ansible.builtin.debug:
+#     msg: "{{ item }}"
+#   loop: "{{ groups['kube_control_plane'] }}"
+#   delegate_to: localhost
+
 
 # ##############Sets current deployments tolerations###################################################
 # - name: Set tolerations on management pods and deployments to run on control planes
@@ -78,6 +131,7 @@
 #     - "kubectl patch deployment prometheus-kube-state-metrics -n prometheus-stack --type merge --patch-file deploypatch.yaml"
 #     - "kubectl rollout restart deployment prometheus-kube-prometheus-operator -n prometheus-stack"
 #     - "kubectl patch deployment prometheus-kube-prometheus-operator -n prometheus-stack --type merge --patch-file deploypatch.yaml"
+
 #     - "kubectl patch statefulset prometheus-grafana --type merge --patch-file deploypatch.yaml -n prometheus-stack"
 #     - "kubectl delete pod prometheus-grafana-0 -n prometheus-stack"
 #     - "kubectl delete pod loki-0 -n prometheus-stack"
@@ -85,15 +139,3 @@
 #     - "kubectl delete pod prometheus-prometheus-kube-prometheus-prometheus-0 -n prometheus-stack"
    
     
-
-
-- name: Apply tolerations to Traefik Deployment
-  kubernetes.core.k8s:
-    #kubeonfig: /root/.kube/config
-    state: present
-    namespace: kube-system
-    src: deploypatch.yaml
-    validate_certs: false
-  delegate_to: localhost
-
-#END#########################################
