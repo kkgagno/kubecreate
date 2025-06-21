@@ -56,6 +56,7 @@
         mode: '0700'
 
     - name: Copy kubeconfig to /root/.kube/config
+      become: true
       copy:
         src: /etc/kubeconfig
         dest: /root/.kube/config
