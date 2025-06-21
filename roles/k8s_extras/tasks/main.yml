@@ -8,6 +8,7 @@
   copy:
     src: /root/.kube/config
     dest: /tmp/config
+    remote_src: true
 
 ##Check if metallb namespace there, end if so#######################################
 - name: Check if metallb is running
