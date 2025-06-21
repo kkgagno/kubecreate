@@ -3,7 +3,7 @@
   include_vars:
     file: inventory/local/cluster-variable.yaml
     name: vardata
-
+#######Get kubeconfig for temp use############################################
 - name: Copy temp kube config file for helm
   become: true
   copy:
@@ -12,14 +12,8 @@
     remote_src: true
     mode: '0644'
 
-#- name: Create namespace
-#  kubernetes.core.k8s:
-#    api_version: v1
-#    kind: Namespace
-#    name: my-namespace
-#    kubeconfig: /tmp/config
-#  delegate_to: localhost
-    
+#######Install Jarvice##########################################################
+# override.yaml needs to be populated and in root of playbook directory#########
 - name: Install/Upgrade Jarvice Helm chart
   become: true
   kubernetes.core.helm:
@@ -34,6 +28,7 @@
       - override.yaml
     kubeconfig: /tmp/config
 
+#######Remove kubeconfig for temp use############################################
 - name: Remove /tmp/config (delete file)
   become: true
   ansible.builtin.file:
@@ -42,4 +37,4 @@
 
 
 #END
-##########################################################################
+###################################################################################

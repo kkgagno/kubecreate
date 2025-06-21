@@ -5,6 +5,7 @@
     file: inventory/local/cluster-variable.yaml
     name: vardata
 
+##This is just here for restoring vms from snapshots, comment out if not needed##################################
 - name: time synch...for when restoring from snap
   become: true
   shell: "{{ item }}"

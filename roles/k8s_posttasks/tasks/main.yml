@@ -109,6 +109,9 @@
     src: k8spatches/grafanapatch.yaml
     validate_certs: false
   delegate_to: localhost
+
+
+  
 #END###################################################################################################
 
 # - name: Show all the hosts in the inventory
