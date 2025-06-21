@@ -63,7 +63,8 @@
         owner: root
         group: root
         mode: '0600'
-
+        remote_src: true
+        
 ##################Helm install on devbox############################################################
 - name: Download Helm
   become: true
