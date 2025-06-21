@@ -17,14 +17,14 @@
     release_state: present
     values_files:
       - override.yaml
-    kubeconfig: /etc/kubeconfig
+    kubeconfig: /tmp/config
+
+- name: Remove /tmp/config (delete file)
+  become: true
+  ansible.builtin.file:
+    path: /tmp/config
+    state: absent
 
 
-    ###############commands################################
-#- name: Jarvice Install
-#  become: true
-#  shell: "{{ item }}"
-#  with_items:    
-#    - "kubectl create ns jarvice-system --kubeconfig /root/.kube/config"
-#    - "helm upgrade jarvice jarvice --version {{ vardata.jarviceversion }} --repo https://nimbix.github.io/jarvice-helm/ --namespace jarvice-system --install --values override.yaml"
-#  register: command_output
+#END
+##########################################################################
