@@ -40,7 +40,7 @@
 
 - name: Remove control plane taint
   become: true
-  command: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
+  command: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule- --overwrite"
   with_items: "{{ groups['kube_control_plane'] }}"
   ignore_errors: true
   delegate_to: localhost
