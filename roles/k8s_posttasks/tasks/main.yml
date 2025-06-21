@@ -110,8 +110,37 @@
     validate_certs: false
   delegate_to: localhost
 
+############Delete pods so they recreate on proper node################################################
+- name: Delete Loki Pod
+  kubernetes.core.k8s:
+    kubeconfig: /root/.kube/config
+    state: absent
+    kind: Pod
+    namespace: prometheus-stack
+    name: loki-0
+  register: loki_delete
+  failed_when: false
 
-  
+- name: Delete Prometheus Alert Pod
+  kubernetes.core.k8s:
+    kubeconfig: /root/.kube/config
+    state: absent
+    kind: Pod
+    namespace: prometheus-stack
+    name: alertmanager-prometheus-kube-prometheus-alertmanager-0
+  register: alert_delete
+  failed_when: false
+
+- name: Delete Prometheus Grafana Pod
+  kubernetes.core.k8s:
+    kubeconfig: /root/.kube/config
+    state: absent
+    kind: Pod
+    namespace: prometheus-stack
+    name: prometheus-grafana-0
+  register: grafana_delete
+  failed_when: false
+
 #END###################################################################################################
 
 # - name: Show all the hosts in the inventory
