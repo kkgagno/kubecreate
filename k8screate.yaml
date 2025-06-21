@@ -1,4 +1,7 @@
 ---
+- hosts: all
+  gather_facts: false
+  
 #- import_playbook: login.yaml
 #- import_playbook: k8s_endpoint.yaml
 - import_playbook: k8s_ctrl_reqs.yaml
