@@ -1,5 +1,5 @@
 #Kubernetes Version (ex. "1.32")
-kube_version: 1.30
+kube_version: "1.30"
 #Pod network applied with Cilium
 kube_pods_subnet: 192.168.0.0/16
 #K8s Endpoint nginx LB
