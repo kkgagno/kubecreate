@@ -4,11 +4,11 @@
     file: k8svars.yml
     name: vardata
 
-- name: Copy files
+- name: Copy temp kube config file for helm
   copy:
     src: /root/.kube/config
     dest: /tmp/config
-
+    remote_src: true
 
 - name: Install/Upgrade Jarvice Helm chart
   become: true
