@@ -14,7 +14,7 @@
 - name: Download Releasekey  
   become: true
   ansible.builtin.get_url: 
-    url: "https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/Release.key"
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ vardata.kube_version }}/deb/Release.key"
     dest: "/etc/apt/keyrings/kubernetes-Release.key"
     mode: '0644'
 
@@ -26,7 +26,7 @@
 
 - name: Add Kubernetes APT repository
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.k8sversion }}/deb/ /"
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v{{ vardata.kube_version }}/deb/ /"
     filename: kubernetes
     state: present
 
