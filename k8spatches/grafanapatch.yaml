@@ -4,7 +4,9 @@ metadata:
   name: prometheus-grafana
   namespace: prometheus-stack
 spec:
-  tolerations:
-  - effect: NoSchedule
-    key: node-role.jarvice.io/jarvice-system
-    operator: Exists
+  template:
+    spec:
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.jarvice.io/jarvice-system
+        operator: Exists
