@@ -4,6 +4,11 @@
     file: inventory/local/cluster-variable.yaml
     name: vardata
 
+- name: Copy temp kubeconfig for helm
+  copy:
+    src: /root/.kube/config
+    dest: /tmp/config
+
 ##Check if metallb namespace there, end if so#######################################
 - name: Check if metallb is running
   shell: "kubectl get namespace |grep metallb-system"
@@ -269,16 +274,20 @@
     kubeconfig: /tmp/config
 
 
-
+####Some cleanup###########################################################
 - name: Remove etc/kubeconfig (delete file)
   become: true
   ansible.builtin.file:
     path: /etc/kubeconfig
     state: absent
 
-
+- name: Remove /tmp/config (delete file)
+  become: true
+  ansible.builtin.file:
+    path: /tmp/config
+    state: absent
 #END
-    #############OLD with commands, worth keeping########################3
+    #############OLD with commands, worth keeping########################
 #- name: Restart kubedns and wait, cis settings crash dns pods
 #  become: true
 #  shell: "{{ item }}"

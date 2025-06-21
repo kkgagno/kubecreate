@@ -4,6 +4,11 @@
     file: k8svars.yml
     name: vardata
 
+- name: Copy files
+  copy:
+    src: /root/.kube/config
+    dest: /tmp/config
+
 
 - name: Install/Upgrade Jarvice Helm chart
   become: true
