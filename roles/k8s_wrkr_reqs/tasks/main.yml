@@ -1,4 +1,5 @@
 ---
+##############check if kubelet is running, end if so###############################################
 - block:
         
    - name: Check if kubelet is running
@@ -28,7 +29,8 @@
   with_items:    
     - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
   register: command_output
-  
+
+###########ContainerD, NFS common, kube binaries installed####################################################################################################################
 - name: Install ContainerD
   apt:
     name:  containerd

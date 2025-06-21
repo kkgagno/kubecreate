@@ -1,13 +1,4 @@
 ---
-- name: Check if kube api is running
-  shell: "pgrep kube-apiserver"
-  register: running_process
-  ignore_errors: true
-- debug:
-    msg:
-     - "{{ running_process.stdout_lines }}"
-  when: running_process.stdout_lines|length > 0
-
 - name: Import vars
   run_once: true
   include_vars:
@@ -19,67 +10,156 @@
   shell: "{{ item }}"
   with_items:    
     - "date -s \"$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z\""
-  register: command_output   
+  register: command_output 
 
-- name: If KubeAPI  running get join command
+######Check for kube api service, create join commands if running###########################################
+#- name: Check if kube api is running
+#  shell: "pgrep kube-apiserver"
+#  register: running_process
+#  ignore_errors: true
+#- debug:
+#    msg:
+#     - "{{ running_process.stdout_lines }}"
+#  when: running_process.stdout_lines|length > 0
+
+#- name: If KubeAPI  running get join command
+#  become: true
+#  shell: "kubeadm token create --print-join-command > /etc/joincluster"
+#  when: running_process.stdout_lines|length > 0
+
+#- name: read join file into var
+#  become: true
+#  shell: "cat /etc/joincluster"
+#  when: running_process.stdout_lines|length > 0
+#  register: joincluster
+#- debug:
+#    msg:
+#     - "{{ joincluster }}" 
+#  when: running_process.stdout_lines|length > 0
+
+#- name: Create join file on ansible host
+#  become: true
+#  file:
+#      path: "/etc/joincluster"
+#      state: touch
+#  delegate_to: localhost
+#  when: running_process.stdout_lines|length > 0
+
+#- name: add contents to ansible host join file
+#  become: true
+#  copy:
+#      dest: "/etc/joincluster"
+#      content: |
+#        {{ joincluster.stdout }}                        
+#  delegate_to: localhost
+#  when: running_process.stdout_lines|length > 0
+- name: Check if kube-apiserver is running
+  shell: pgrep kube-apiserver
+  register: kube_apiserver_status
+  ignore_errors: true
+
+- name: Show kube-apiserver processes (if running)
+  debug:
+    msg: "{{ kube_apiserver_status.stdout_lines }}"
+  when: kube_apiserver_status.rc == 0
+
+- name: Generate kubeadm join command (if kube-apiserver is running)
   become: true
-  shell: "kubeadm token create --print-join-command > /etc/joincluster"
-  when: running_process.stdout_lines|length > 0
+  command: kubeadm token create --print-join-command
+  register: kubeadm_join_command
+  when: kube_apiserver_status.rc == 0
 
-- name: read join file into var
-  become: true
-  shell: "cat /etc/joincluster"
-  when: running_process.stdout_lines|length > 0
-  register: joincluster
-- debug:
-    msg:
-     - "{{ joincluster }}" 
-  when: running_process.stdout_lines|length > 0
-
-- name: Create join file on ansible host
-  become: true
-  file:
-      path: "/etc/joincluster"
-      state: touch
-  delegate_to: localhost
-  when: running_process.stdout_lines|length > 0
-
-- name: add contents to ansible host join file
+- name: Save join command to file on controller node
   become: true
   copy:
-      dest: "/etc/joincluster"
-      content: |
-        {{ joincluster.stdout }}                        
+    dest: /etc/joincluster
+    content: "{{ kubeadm_join_command.stdout }}"
+    owner: root
+    group: root
+    mode: '0600'
+  when: kube_apiserver_status.rc == 0
+
+- name: Save join command to file on Ansible control host
   delegate_to: localhost
-  when: running_process.stdout_lines|length > 0
-
-- name: read kubecfg into var
-  become: true
-  shell: "cat $HOME/.kube/config"
-  register: kubecfg
-  when: running_process.stdout_lines|length > 0
-  #- debug:
-  #  when: running_process.stdout_lines|length > 0
-  #  msg:
-  #    - "{{ kubecfg.stdout }}"
-
-- name: Create kubecfg file local
-  file:
-      path: "/etc/kubeconfig"
-      state: touch
-  delegate_to: localhost
-  when: running_process.stdout_lines|length > 0
-
-- name: add contents to file
   copy:
-      dest: "/etc/kubeconfig"
-      content: |
-        {{ kubecfg.stdout }}                        
+    dest: /etc/joincluster
+    content: "{{ kubeadm_join_command.stdout }}"
+    owner: "{{ ansible_user | default('root') }}"
+    group: "{{ ansible_user | default('root') }}"
+    mode: '0600'
+  when: kube_apiserver_status.rc == 0
+
+- name: Read kubeconfig into variable (if kube-apiserver is running)
+  become: true
+  slurp:
+    src: "{{ ansible_env.HOME }}/.kube/config"
+  register: kubeconfig_content
+  when: kube_apiserver_status.rc == 0
+
+- name: Show kubeconfig content (decoded)
+  debug:
+    msg: "{{ kubeconfig_content.content | b64decode }}"
+  when: kube_apiserver_status.rc == 0
+
+#######If kube api running, get kube config###################################################################################
+#- name: read kubecfg into var
+#  become: true
+#  shell: "cat $HOME/.kube/config"
+#  register: kubecfg
+#  when: running_process.stdout_lines|length > 0
+
+#- name: Create kubecfg file local
+#  file:
+#      path: "/etc/kubeconfig"
+#      state: touch
+#  delegate_to: localhost
+#  when: running_process.stdout_lines|length > 0
+
+#- name: add contents to file
+#  copy:
+#      dest: "/etc/kubeconfig"
+#      content: |
+#        {{ kubecfg.stdout }}                        
+#  delegate_to: localhost
+#  when: running_process.stdout_lines|length > 0
+#- meta: end_host
+#  when: running_process.stdout_lines|length > 0
+- name: Read kubeconfig into variable
+  become: true
+  ansible.builtin.slurp:
+    src: "$HOME/.kube/config"
+  register: kubecfg_raw
+  when: running_process.stdout_lines | length > 0
+
+- name: Decode kubeconfig content
+  ansible.builtin.set_fact:
+    kubecfg: "{{ kubecfg_raw.content | b64decode }}"
+  when: running_process.stdout_lines | length > 0
+
+- name: Ensure local kubeconfig file exists
+  ansible.builtin.file:
+    path: "/etc/kubeconfig"
+    state: touch
+    owner: root
+    group: root
+    mode: '0600'
   delegate_to: localhost
-  when: running_process.stdout_lines|length > 0
+  when: running_process.stdout_lines | length > 0
+
+- name: Write kubeconfig content to local file
+  ansible.builtin.copy:
+    dest: "/etc/kubeconfig"
+    content: "{{ kubecfg }}"
+    owner: root
+    group: root
+    mode: '0600'
+  delegate_to: localhost
+  when: running_process.stdout_lines | length > 0
+
 - meta: end_host
-  when: running_process.stdout_lines|length > 0
+  when: running_process.stdout_lines | length > 0
 
+###########ContainerD, NFS common, kube binaries installed####################################################################################################################
 - name: Install ContainerD
   apt:
     name:  containerd
