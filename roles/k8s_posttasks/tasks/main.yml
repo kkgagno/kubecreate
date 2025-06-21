@@ -1,21 +1,34 @@
 #####For later##########################################################################
-- name: Show all the hosts in the inventory
-  ansible.builtin.debug:
-    msg: "{{ item }}"
-  loop: "{{ groups['kube_control_plane'] }}"
-  delegate_to: localhost
+# - name: Show all the hosts in the inventory
+#   ansible.builtin.debug:
+#     msg: "{{ item }}"
+#   loop: "{{ groups['kube_control_plane'] }}"
+#   delegate_to: localhost
 
-- name: Set control plane nodes jarvice labels THINK ISSUE WITH VERSIONING OF ANSIBLE AND PYTHON FOR THIS
+- name: Set control plane nodes jarvice labels
   k8s:
     state: patched
     kind: Node
     name: "{{ item }}"
     definition:
-      apiversion: v1      
+      #apiversion: v1      
       metadata:
         labels:
           node-role.kubernetes.io/jarvice-system: ""
   with_items: "{{ groups['kube_control_plane'] }}"
+  delegate_to: localhost
+
+- name: Set worker nodes jarvice labels
+  k8s:
+    state: patched
+    kind: Node
+    name: "{{ item }}"
+    definition:
+      #apiversion: v1      
+      metadata:
+        labels:
+          node-role.kubernetes.io/jarvice-compute: ""
+  with_items: "{{ groups['kube_node'] }}"
   delegate_to: localhost
 ############label nodes and apply taints#################################################
 # - name: Set control plane nodes jarvice labels
