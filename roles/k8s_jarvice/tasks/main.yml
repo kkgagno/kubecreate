@@ -12,13 +12,13 @@
     remote_src: true
     mode: '0644'
 
-- name: Create namespace
-  kubernetes.core.k8s:
-    api_version: v1
-    kind: Namespace
-    name: my-namespace
-    kubeconfig: /tmp/config
-  delegate_to: localhost
+#- name: Create namespace
+#  kubernetes.core.k8s:
+#    api_version: v1
+#    kind: Namespace
+#    name: my-namespace
+#    kubeconfig: /tmp/config
+#  delegate_to: localhost
     
 - name: Install/Upgrade Jarvice Helm chart
   become: true

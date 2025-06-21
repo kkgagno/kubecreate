@@ -89,7 +89,7 @@
 
 - name: Apply tolerations to Traefik Deployment
   kubernetes.core.k8s:
-    kubeonfig: /root/.kube/config
+    #kubeonfig: /root/.kube/config
     state: present
     namespace: kube-system
     src: deploypatch.yaml
