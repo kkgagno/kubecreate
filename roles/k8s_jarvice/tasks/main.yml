@@ -5,6 +5,7 @@
     name: vardata
 
 - name: Copy temp kube config file for helm
+  become: true
   copy:
     src: /root/.kube/config
     dest: /tmp/config
