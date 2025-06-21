@@ -87,15 +87,13 @@
     
 
 
-
-#- name: Update deployment with tolerations THINK ISSUE WITH VERSIONING OF ANSIBLE AND PYTHON FOR THIS
-#  k8s:
-#    kubeconfig: /root/.kube/config
-#    state: present
-#    namespace: kube-system
-#    kind: Deployment
-#    name: traefik
-#    key_file: tolerations.yml
-#    validate_certs: false
+- name: Apply tolerations to Traefik Deployment
+  kubernetes.core.k8s:
+    kubeonfig: /root/.kube/config
+    state: present
+    namespace: kube-system
+    src: deploypatch.yaml
+    validate_certs: false
+  delegate_to: localhost
 
 #END#########################################
