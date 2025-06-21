@@ -12,6 +12,13 @@
     remote_src: true
     mode: '0644'
 
+- name: Create namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: my-namespace
+    kubeconfig: /root/.kube/config
+
 - name: Install/Upgrade Jarvice Helm chart
   become: true
   kubernetes.core.helm:
