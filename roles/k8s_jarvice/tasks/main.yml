@@ -18,7 +18,7 @@
     kind: Namespace
     name: my-namespace
     kubeconfig: /tmp/config
-    delegate_to: localhost
+  delegate_to: localhost
     
 - name: Install/Upgrade Jarvice Helm chart
   become: true
