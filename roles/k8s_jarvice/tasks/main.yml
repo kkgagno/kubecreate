@@ -17,7 +17,7 @@
     api_version: v1
     kind: Namespace
     name: my-namespace
-    kubeconfig: /root/.kube/config
+    kubeconfig: /tmp/config
 
 - name: Install/Upgrade Jarvice Helm chart
   become: true
