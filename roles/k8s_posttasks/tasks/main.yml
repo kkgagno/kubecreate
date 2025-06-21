@@ -26,13 +26,13 @@
 ############Apply taints to nodes#################################################
 - name: Set control plane nodes jarvice taints
   become: true
-  command: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule"
+  command: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule --overwrite"
   with_items: "{{ groups['kube_control_plane'] }}"
   ignore_errors: true
 
 - name: Set worker nodes jarvice taints
   become: true
-  command: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule"
+  command: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-compute=true:NoSchedule --overwrite"
   with_items: "{{ groups['kube_node'] }}"
   ignore_errors: true
 
