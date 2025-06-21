@@ -23,7 +23,7 @@
   with_items: "{{ groups['kube_node'] }}"
   delegate_to: localhost
 
-############Apply taints to nodes#################################################
+############Apply taints to nodes#########################################################################################
 - name: Set control plane nodes jarvice taints
   become: true
   command: "kubectl taint node {{ item }} node-role.jarvice.io/jarvice-system=true:NoSchedule --overwrite"
@@ -39,7 +39,10 @@
 - name: Remove control plane taint
   become: true
   command: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane=true:NoSchedule-"
+  with_items: "{{ groups['kube_control_plane'] }}"
+  ignore_errors: true
 
+  ##########Apply tolerations to existing deployments and stateful sets#######################################################
 - name: Apply tolerations to Traefik Deployment
   kubernetes.core.k8s:    
     state: present
