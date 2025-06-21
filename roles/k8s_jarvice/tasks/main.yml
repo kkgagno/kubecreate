@@ -18,8 +18,8 @@
     kind: Namespace
     name: my-namespace
     kubeconfig: /tmp/config
-    remote_src: true
-
+    delegate_to: localhost
+    
 - name: Install/Upgrade Jarvice Helm chart
   become: true
   kubernetes.core.helm:
