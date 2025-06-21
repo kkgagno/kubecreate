@@ -1,3 +1,4 @@
+#####For later##########################################################################
 #- name: Show all the hosts in the inventory
 #  ansible.builtin.debug:
 #    msg: "{{ item }}"
@@ -16,6 +17,7 @@
 #          node-role.kubernetes.io/jarvice-system: ""
 #  with_items: "{{ groups['kube_control_plane'] }}"
 
+############label nodes and apply taints#################################################
 - name: Set control plane nodes jarvice labels
   become: true
   shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-system=true"
@@ -33,8 +35,6 @@
   with_items: "{{ groups['kube_control_plane'] }}"
   ignore_errors: true
 
-
-
 - name: Set worker nodes jarvice labels
   become: true
   shell: "kubectl label nodes {{ item }} node-role.kubernetes.io/jarvice-compute=true"
@@ -46,7 +46,7 @@
   with_items: "{{ groups['kube_node'] }}"
   ignore_errors: true
 
-
+##############Sets current deployments tolerations###################################################
 - name: Set tolerations on management pods and deployments to run on control planes
   become: true
   shell: "{{ item }}"
@@ -65,16 +65,13 @@
     - "kubectl patch deployment prometheus-kube-state-metrics -n prometheus-stack --type merge --patch-file deploypatch.yaml"
     - "kubectl rollout restart deployment prometheus-kube-prometheus-operator -n prometheus-stack"
     - "kubectl patch deployment prometheus-kube-prometheus-operator -n prometheus-stack --type merge --patch-file deploypatch.yaml"
-    - "kubectl delete pod prometheus-grafana-0 -n prometheus-stack"
     - "kubectl patch statefulset prometheus-grafana --type merge --patch-file deploypatch.yaml -n prometheus-stack"
-    #- "kubectl delete pod loki-0 -n prometheus-stack"
-    #- "kubectl patch pod loki-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
+    - "kubectl delete pod prometheus-grafana-0 -n prometheus-stack"
+    - "kubectl delete pod loki-0 -n prometheus-stack"
+    - "kubectl delete pod alertmanager-prometheus-kube-prometheus-alertmanager-0 -n prometheus-stack"    
     #- "kubectl delete pod prometheus-prometheus-kube-prometheus-prometheus-0 -n prometheus-stack"
-    #- "kubectl patch pod prometheus-prometheus-kube-prometheus-prometheus-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
-    #- "kubectl delete pod alertmanager-prometheus-kube-prometheus-alertmanager-0 -n prometheus-stack"
-    #- "kubectl patch pod alertmanager-prometheus-kube-prometheus-alertmanager-0 -n prometheus-stack --type merge --patch-file podpatch.yaml"
-
-    #Need to delete prometheus-grafana-0 pod, loki-0, alertmanager-prometheus-kube-prometheus-alertmanager-0
+   
+    
 
 
 
@@ -87,3 +84,5 @@
 #    name: traefik
 #    key_file: tolerations.yml
 #    validate_certs: false
+
+#END#########################################
